@@ -12,14 +12,9 @@ let pantallaDestinoTemporal = null;
 let productos = []; 
 
 // --- NUEVA FUNCIÓN: GUARDAR PEDIDO EN TABLA ---
-// Función para guardar el pedido compatible con el Dashboard de Streamlit
 async function guardarPedidoEnSupabase(datos) {
     try {
-        // Obtenemos la fecha actual
         const ahora = new Date();
-        
-        // Formateamos como: YYYY-MM-DD HH:mm:ss
-        // Usamos padStart(2, '0') para que siempre tenga dos números (ej: 01 en vez de 1)
         const fechaParaStreamlit = 
             ahora.getFullYear() + "-" + 
             String(ahora.getMonth() + 1).padStart(2, '0') + "-" + 
@@ -32,7 +27,7 @@ async function guardarPedidoEnSupabase(datos) {
             .from('pedidos')
             .insert([
                 {
-                    fecha: fechaParaStreamlit + "+00", // Le sumamos el +00 para que coincida exacto
+                    fecha: fechaParaStreamlit + "+00",
                     detalle: datos.detalle,
                     cliente: datos.cliente,
                     monto: parseInt(datos.monto),
@@ -44,7 +39,6 @@ async function guardarPedidoEnSupabase(datos) {
             ]);
 
         if (error) throw error;
-        console.log("Fecha enviada igual que Streamlit:", fechaParaStreamlit + "+00");
     } catch (err) {
         console.error("Error al guardar pedido:", err);
     }
@@ -74,8 +68,10 @@ async function cargarProductosDesdeBD() {
 
 // 4. FUNCIONES DE NAVEGACIÓN
 function mostrarPantalla(idPantalla) {
-    const pantallaActual = document.getElementById('menu').style.display;
-    if (idPantalla === 'inicio' && pantallaActual === 'block' && carrito.length > 0) {
+    const pantallaMenu = document.getElementById('menu');
+    const pantallaActualVisible = pantallaMenu && pantallaMenu.style.display === 'block';
+
+    if (idPantalla === 'inicio' && pantallaActualVisible && carrito.length > 0) {
         pantallaDestinoTemporal = idPantalla;
         document.getElementById('modal-confirmacion').style.display = 'flex';
         return;
@@ -160,7 +156,7 @@ function abrirDetalle(id) {
 // 7. LÓGICA DE CARRITO
 function toggleCheckbox(elemento) {
     const cb = elemento.querySelector('input[type="checkbox"]');
-    cb.checked = !cb.checked;
+    if (cb) cb.checked = !cb.checked;
 }
 
 function cambiarCantDetalle(delta) {
@@ -243,53 +239,84 @@ async function enviarWhatsApp() {
     const dir = document.getElementById('dir-cliente').value.trim();
     const pago = document.getElementById('metodo-pago').value;
 
+    // Validación básica
     if (!nombre || (entrega === 'Delivery' && !dir)) {
         mostrarMensaje("Completá tus datos ✍️", 3000);
         return;
     }
 
-    // --- PROCESAR DETALLE PARA BASE DE DATOS (PÁGINA 1) ---
-// El Dashboard espera "Cantidadx Nombre", por ejemplo: "1x Cheddy Krueger"
-const detalleBD = carrito.map(item => {
+    // --- BLOQUEO ANTI-DUPLICADOS ---
+    // Seleccionamos el botón específico dentro de la sección checkout
+    const btnConfirmar = document.querySelector('#checkout .btn-principal');
+    
+    if (btnConfirmar) {
+        btnConfirmar.disabled = true; // Evita nuevos clics
+        btnConfirmar.innerText = "⏳ PROCESANDO..."; // Cambio de texto visual
+        btnConfirmar.style.opacity = "0.6"; // Efecto visual de desactivado
+        btnConfirmar.style.cursor = "not-allowed";
+    }
+
+    const detalleBD = carrito.map(item => {
         let texto = `${item.cantidad}x ${item.nombre.trim()}`;
-        
-        // Si hay ingredientes quitados, los agregamos entre paréntesis para que no rompan las métricas
         if (item.quitados && item.quitados.length > 0) {
             texto += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
         }
         return texto;
     }).join(' | ');
 
-    // Llamada al guardado con la fecha corregida (+00) y el detalle completo
-    await guardarPedidoEnSupabase({
-        cliente: nombre,
-        detalle: detalleBD,
-        monto: total,
-        metodo_pago: pago,
-        entrega: entrega,
-        direccion: entrega === 'Delivery' ? dir : 'Retira en local'
-    });
+    try {
+        // Guardamos en Supabase
+        await guardarPedidoEnSupabase({
+            cliente: nombre,
+            detalle: detalleBD,
+            monto: total,
+            metodo_pago: pago,
+            entrega: entrega,
+            direccion: entrega === 'Delivery' ? dir : 'Retira en local'
+        });
 
-    mostrarMensaje("✅ ¡Pedido confirmado! Serás redirigido al chat...", 4000);
+        mostrarMensaje("✅ ¡Pedido confirmado!", 4000);
 
-    // Mensaje WhatsApp
-    let msg = `TU PEDIDO \n\n*Tu nombre:* ${nombre}\n*Entrega:* ${entrega}\n`;
-    if (entrega === 'Delivery') msg += `*Dirección:* ${dir}\n`;
-    msg += `*Pago:* ${pago}\n\n*PRODUCTOS:*\n`;
+        // Armamos el mensaje para WhatsApp
+        let msg = `TU PEDIDO \n\n*Tu nombre:* ${nombre}\n*Entrega:* ${entrega}\n`;
+        if (entrega === 'Delivery') msg += `*Dirección:* ${dir}\n`;
+        msg += `*Pago:* ${pago}\n\n*PRODUCTOS:*\n`;
 
-    carrito.forEach(item => {
-        msg += `- ${item.cantidad}x ${item.nombre}`;
-        if (item.quitados.length > 0) msg += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
-        msg += `\n`;
-    });
-    msg += `\n*TOTAL: $${total}*\n`;
+        carrito.forEach(item => {
+            msg += `- ${item.cantidad}x ${item.nombre}`;
+            if (item.quitados.length > 0) msg += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
+            msg += `\n`;
+        });
+        msg += `\n*TOTAL: $${total}*\n`;
 
-    setTimeout(() => {
-        window.open(`https://wa.me/5492215383928?text=${encodeURIComponent(msg)}`);
-        carrito = [];
-        actualizarBarra();
-        mostrarPantalla('inicio');
-    }, 2500);
+        // Esperamos un momento para que el usuario vea el mensaje de éxito antes de redirigir
+        setTimeout(() => {
+            window.open(`https://wa.me/5492215383928?text=${encodeURIComponent(msg)}`);
+            
+            // Limpiamos carrito y restablecemos la interfaz
+            carrito = [];
+            actualizarBarra();
+            
+            if (btnConfirmar) {
+                btnConfirmar.disabled = false;
+                btnConfirmar.innerText = "CONFIRMAR POR WHATSAPP";
+                btnConfirmar.style.opacity = "1";
+                btnConfirmar.style.cursor = "pointer";
+            }
+            
+            mostrarPantalla('inicio');
+        }, 2000);
+
+    } catch (err) {
+        console.error(err);
+        mostrarMensaje("❌ Hubo un error. Reintenta.", 3000);
+        // Si falla el guardado, rehabilitamos el botón para que pueda intentar de nuevo
+        if (btnConfirmar) {
+            btnConfirmar.disabled = false;
+            btnConfirmar.innerText = "CONFIRMAR POR WHATSAPP";
+            btnConfirmar.style.opacity = "1";
+        }
+    }
 }
 
 // FUNCIONES AUXILIARES

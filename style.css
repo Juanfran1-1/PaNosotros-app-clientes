@@ -3,6 +3,7 @@
     --oscuro: #332d2b;
     --fondo: #fdfaf5;
     --blanco: #ffffff;
+    --violeta: #7f1783d7;
 }
 
 /* 1. RESET Y BOX-SIZING GLOBAL */
@@ -171,7 +172,7 @@ input, select {
 
 /* BOTONES Y OTROS */
 .btn-principal { background: var(--naranja); color: white; border: none; padding: 15px 30px; border-radius: 50px; font-weight: bold; cursor: pointer; width: 100%; }
-
+.btn-redes { background: var(--violeta); color: white; border: none; padding: 15px 30px; border-radius: 50px; font-weight: bold; cursor: pointer; width: 100%; }
 .btn-carrito {
     position: fixed;
     bottom: 20px;
