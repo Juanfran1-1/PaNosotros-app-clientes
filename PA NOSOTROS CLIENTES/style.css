@@ -1,0 +1,254 @@
+:root {
+    --naranja: #d35400;
+    --oscuro: #332d2b;
+    --fondo: #fdfaf5;
+    --blanco: #ffffff;
+}
+
+/* 1. RESET Y BOX-SIZING GLOBAL */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #222; 
+    display: flex;
+    justify-content: center;
+    overflow-x: hidden; 
+}
+
+section {
+    width: 100%;
+    max-width: 500px;
+    min-height: 100vh;
+    padding: 20px;
+    background-color: var(--fondo);
+    position: relative;
+    text-align: center;
+}
+
+/* PANTALLA INICIO */
+#inicio {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('Fondo.jpg') center/cover;
+    color: white;
+}
+
+/* TARJETAS MENÚ */
+.card {
+    background: var(--blanco);
+    border-radius: 15px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+    cursor: pointer;
+}
+
+.img-producto { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; }
+.info { flex: 1; text-align: left; }
+.info h3 { margin: 0; font-size: 1rem; }
+.desc-texto { font-size: 0.75rem; color: #666; margin: 3px 0; display: block; }
+.info p { margin: 0; font-weight: bold; color: var(--naranja); }
+.btn-op { background: var(--naranja); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; }
+
+/* DETALLE PRODUCTO */
+#detalle-producto { padding: 0; text-align: left; }
+.header-detalle { position: absolute; top: 15px; left: 15px; z-index: 5; }
+.btn-cerrar-detalle { background: rgba(0,0,0,0.5); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; }
+#contenido-detalle img { width: 100%; height: 300px; object-fit: cover; }
+.info-detalle { padding: 20px; margin-bottom: 80px; }
+
+/* --- LISTA DE INGREDIENTES --- */
+.lista-quitar { 
+    background: #f0f0f0; 
+    padding: 15px; 
+    border-radius: 15px; 
+    margin-top: 15px;
+}
+
+.item-check { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 12px 0; 
+    border-bottom: 1px solid #ddd; 
+    cursor: pointer;
+}
+
+.item-check:last-child { border-bottom: none; }
+
+.item-check label {
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    flex: 1;
+}
+
+.item-check .prefix {
+    font-size: 0.75rem;
+    color: #777;
+}
+
+.item-check .nombre-ing {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--oscuro);
+}
+
+.item-check input[type="checkbox"] { 
+    width: 22px; 
+    height: 22px; 
+    accent-color: var(--naranja); 
+    cursor: pointer;
+}
+
+/* FOOTER FIJO */
+.footer-fijo-detalle {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    max-width: 500px;
+    background: white;
+    padding: 15px 20px;
+    display: flex;
+    gap: 15px;
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+}
+
+.controles-cantidad-detalle {
+    display: flex;
+    align-items: center;
+    background: #eee;
+    border-radius: 10px;
+}
+.controles-cantidad-detalle button { background: none; border: none; padding: 10px 15px; font-size: 1.2rem; color: var(--naranja); font-weight: bold; }
+.btn-agregar-detalle { flex: 1; background: var(--naranja); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 1rem; }
+
+/* FORMULARIOS Y CHECKOUT */
+.form-group { text-align: left; margin-bottom: 15px; width: 100%; }
+
+input, select { 
+    width: 100%; 
+    padding: 12px; 
+    border-radius: 10px; 
+    border: 1px solid #ccc; 
+    font-family: inherit;
+    display: block;
+}
+
+/* INFO TRANSFERENCIA */
+#info-transferencia {
+    background: #f0f7ff;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #d0e3ff;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.btn-copiar {
+    background: var(--oscuro);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+    width: 100%;
+    transition: background 0.3s;
+}
+
+/* BOTONES Y OTROS */
+.btn-principal { background: var(--naranja); color: white; border: none; padding: 15px 30px; border-radius: 50px; font-weight: bold; cursor: pointer; width: 100%; }
+
+.btn-carrito {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 440px;
+    background: var(--oscuro);
+    color: white;
+    padding: 15px;
+    border-radius: 15px;
+    display: flex;
+    justify-content: space-between;
+    border: none;
+    font-weight: bold;
+    z-index: 100;
+}
+
+/* --- LOADER Y SPINNER --- */
+#loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--oscuro);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.1);
+    border-top: 5px solid var(--naranja);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- TOAST (Mensajes flotantes) --- */
+#toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--oscuro);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    z-index: 10000; /* Aumentado para estar sobre todo */
+    display: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* --- ESTILOS ADICIONALES PARA EL MODAL DE CONFIRMACIÓN --- */
+#modal-confirmacion {
+    animation: fadeIn 0.3s ease-out;
+}
+
+#modal-confirmacion > div {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
