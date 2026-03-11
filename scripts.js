@@ -1,0 +1,327 @@
+// 1. CONFIGURACIÓN DE SUPABASE
+const SUPABASE_URL = "https://xpvqjuqywlkrutuukrxc.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwdnFqdXF5d2xrcnV0dXVrcnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5NDQwNTMsImV4cCI6MjA4ODUyMDA1M30.6HikuOJDbY8Z-hCT-oJPau6XZJ4Bs0UErQvNRy9zDC4";
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// 2. VARIABLES GLOBALES
+let carrito = []; 
+let total = 0;
+let productoSeleccionado = null;
+let cantidadEnDetalle = 1;
+let pantallaDestinoTemporal = null;
+let productos = []; 
+
+// --- NUEVA FUNCIÓN: GUARDAR PEDIDO EN TABLA ---
+// Función para guardar el pedido compatible con el Dashboard de Streamlit
+async function guardarPedidoEnSupabase(datos) {
+    try {
+        // Obtenemos la fecha actual
+        const ahora = new Date();
+        
+        // Formateamos como: YYYY-MM-DD HH:mm:ss
+        // Usamos padStart(2, '0') para que siempre tenga dos números (ej: 01 en vez de 1)
+        const fechaParaStreamlit = 
+            ahora.getFullYear() + "-" + 
+            String(ahora.getMonth() + 1).padStart(2, '0') + "-" + 
+            String(ahora.getDate()).padStart(2, '0') + " " + 
+            String(ahora.getHours()).padStart(2, '0') + ":" + 
+            String(ahora.getMinutes()).padStart(2, '0') + ":" + 
+            String(ahora.getSeconds()).padStart(2, '0');
+
+        const { error } = await _supabase
+            .from('pedidos')
+            .insert([
+                {
+                    fecha: fechaParaStreamlit + "+00", // Le sumamos el +00 para que coincida exacto
+                    detalle: datos.detalle,
+                    cliente: datos.cliente,
+                    monto: parseInt(datos.monto),
+                    metodo_pago: datos.metodo_pago,
+                    entrega: datos.entrega,
+                    direccion: datos.direccion,
+                    estado: "Pendiente de Pago"
+                }
+            ]);
+
+        if (error) throw error;
+        console.log("Fecha enviada igual que Streamlit:", fechaParaStreamlit + "+00");
+    } catch (err) {
+        console.error("Error al guardar pedido:", err);
+    }
+}
+
+// 3. CARGA DE DATOS DESDE SUPABASE
+async function cargarProductosDesdeBD() {
+    try {
+        const { data, error } = await _supabase.from('hamburguesas').select('*');
+        if (error) throw error;
+        
+        productos = data.map(p => ({
+            ...p,
+            foto: p.foto || 'Logo.jpg',
+            desc: p.desc || 'Combo de 5 mini burgers + papas noisette.',
+            ingredientes: p.ingredientes ? p.ingredientes.split(',').map(i => i.trim()) : ['Cheddar', 'Panceta', 'Pepinillos']
+        }));
+
+        const loader = document.getElementById('loader');
+        if (loader) loader.style.display = 'none';
+        
+    } catch (err) {
+        console.error("Error cargando base de datos:", err);
+        mostrarMensaje("Error al cargar el menú ❌", 5000);
+    }
+}
+
+// 4. FUNCIONES DE NAVEGACIÓN
+function mostrarPantalla(idPantalla) {
+    const pantallaActual = document.getElementById('menu').style.display;
+    if (idPantalla === 'inicio' && pantallaActual === 'block' && carrito.length > 0) {
+        pantallaDestinoTemporal = idPantalla;
+        document.getElementById('modal-confirmacion').style.display = 'flex';
+        return;
+    }
+    ejecutarCambioPantalla(idPantalla);
+}
+
+function ejecutarCambioPantalla(idPantalla) {
+    const loader = document.getElementById('loader');
+    if (loader) loader.style.display = 'flex';
+
+    setTimeout(() => {
+        document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+        const target = document.getElementById(idPantalla);
+        if (target) {
+            target.style.display = (idPantalla === 'inicio') ? 'flex' : 'block';
+        }
+        if (idPantalla === 'menu') cargarMenu();
+        if (idPantalla === 'checkout') actualizarResumenCheckout();
+        if (loader) loader.style.display = 'none';
+        window.scrollTo(0, 0);
+    }, 300);
+}
+
+function cerrarConfirmacion(acepta) {
+    document.getElementById('modal-confirmacion').style.display = 'none';
+    if (acepta) {
+        carrito = [];
+        actualizarBarra();
+        ejecutarCambioPantalla(pantallaDestinoTemporal);
+    }
+    pantallaDestinoTemporal = null;
+}
+
+// 5. CARGAR MENÚ
+function cargarMenu() {
+    const contenedor = document.getElementById('contenedor-menu');
+    if (!contenedor) return;
+    contenedor.innerHTML = "";
+    productos.forEach(p => {
+        contenedor.innerHTML += `
+            <div class="card" onclick="abrirDetalle(${p.id})">
+                <img src="${p.foto}" class="img-producto" onerror="this.src='Logo.jpg'">
+                <div class="info">
+                    <h3>${p.nombre}</h3>
+                    <span class="desc-texto">${p.desc}</span>
+                    <p>$${p.precio}</p>
+                </div>
+                <button class="btn-op">+</button>
+            </div>`;
+    });
+    actualizarBarra();
+}
+
+// 6. DETALLE DE PRODUCTO
+function abrirDetalle(id) {
+    productoSeleccionado = productos.find(p => p.id === id);
+    if (!productoSeleccionado) return;
+    cantidadEnDetalle = 1;
+    const cont = document.getElementById('contenido-detalle');
+    if (cont) {
+        cont.innerHTML = `
+            <img src="${productoSeleccionado.foto}" onerror="this.src='Logo.jpg'">
+            <div class="info-detalle">
+                <h2>${productoSeleccionado.nombre}</h2>
+                <p style="color: #666; font-size: 0.9rem;">${productoSeleccionado.desc}</p>
+                <div class="lista-quitar">
+                    <p style="font-weight: bold; margin-bottom: 10px; font-size: 0.85rem; color: #333;">¿QUITAR INGREDIENTES?</p>
+                    ${productoSeleccionado.ingredientes.map(ing => `
+                        <div class="item-check" onclick="toggleCheckbox(this)">
+                            <label><span class="prefix">Sin</span><span class="nombre-ing">${ing}</span></label>
+                            <input type="checkbox" class="check-quitar" value="${ing}" onclick="event.stopPropagation()">
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+    }
+    actualizarFooterDetalle();
+    mostrarPantalla('detalle-producto');
+}
+
+// 7. LÓGICA DE CARRITO
+function toggleCheckbox(elemento) {
+    const cb = elemento.querySelector('input[type="checkbox"]');
+    cb.checked = !cb.checked;
+}
+
+function cambiarCantDetalle(delta) {
+    cantidadEnDetalle = Math.max(1, cantidadEnDetalle + delta);
+    actualizarFooterDetalle();
+}
+
+function actualizarFooterDetalle() {
+    const cantElem = document.getElementById('cantidad-detalle');
+    const subElem = document.getElementById('subtotal-detalle');
+    if (cantElem) cantElem.innerText = cantidadEnDetalle;
+    if (subElem) subElem.innerText = (productoSeleccionado.precio * cantidadEnDetalle);
+}
+
+function agregarAlCarritoDesdeDetalle() {
+    const quitados = Array.from(document.querySelectorAll('.check-quitar:checked')).map(el => el.value);
+    
+    const itemExistente = carrito.find(item => 
+        item.nombre === productoSeleccionado.nombre && 
+        JSON.stringify(item.quitados.sort()) === JSON.stringify(quitados.sort())
+    );
+
+    if (itemExistente) {
+        itemExistente.cantidad += cantidadEnDetalle;
+    } else {
+        carrito.push({
+            nombre: productoSeleccionado.nombre,
+            precio: productoSeleccionado.precio,
+            cantidad: cantidadEnDetalle,
+            quitados: quitados
+        });
+    }
+
+    mostrarMensaje("¡Agregado!", 2000);
+    mostrarPantalla('menu');
+}
+
+function actualizarBarra() {
+    let n = carrito.reduce((acc, item) => acc + item.cantidad, 0);
+    total = carrito.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
+    const btnCarrito = document.getElementById('btn-flotante-carrito');
+    const cartCount = document.getElementById('cart-count');
+    const cartTotal = document.getElementById('cart-total');
+    if (n > 0) {
+        if (btnCarrito) btnCarrito.style.display = 'flex';
+        if (cartCount) cartCount.innerText = n;
+        if (cartTotal) cartTotal.innerText = total;
+    } else {
+        if (btnCarrito) btnCarrito.style.display = 'none';
+    }
+}
+
+function actualizarResumenCheckout() {
+    const contenedor = document.getElementById('resumen-pedido');
+    if (!contenedor) return;
+    contenedor.innerHTML = "<strong>Resumen:</strong><br><br>";
+    carrito.forEach((item, index) => {
+        let detalleQuitados = item.quitados.length > 0 ? `<br><small style="color: #d35400;">SIN: ${item.quitados.join(', ')}</small>` : "";
+        contenedor.innerHTML += `
+            <div style="background: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #eee; text-align: left; position: relative; color: #333;">
+                <button onclick="eliminarDelCarrito(${index})" style="position:absolute; right:10px; top:10px; border:none; background:none; color:gray; font-size:1.2rem;">✕</button>
+                <strong>${item.cantidad}x ${item.nombre}</strong> - $${item.precio * item.cantidad}
+                ${detalleQuitados}
+            </div>`;
+    });
+    contenedor.innerHTML += `<h3 style="color:#333">TOTAL: $${total}</h3>`;
+}
+
+function eliminarDelCarrito(index) {
+    carrito.splice(index, 1);
+    actualizarResumenCheckout();
+    actualizarBarra();
+    if (carrito.length === 0) mostrarPantalla('menu');
+}
+
+// 8. ENVÍO A WHATSAPP Y GUARDADO EN BD
+async function enviarWhatsApp() {
+    const nombre = document.getElementById('nombre-cliente').value.trim();
+    const entrega = document.getElementById('metodo-entrega').value;
+    const dir = document.getElementById('dir-cliente').value.trim();
+    const pago = document.getElementById('metodo-pago').value;
+
+    if (!nombre || (entrega === 'Delivery' && !dir)) {
+        mostrarMensaje("Completá tus datos ✍️", 3000);
+        return;
+    }
+
+    // --- PROCESAR DETALLE PARA BASE DE DATOS (PÁGINA 1) ---
+// El Dashboard espera "Cantidadx Nombre", por ejemplo: "1x Cheddy Krueger"
+const detalleBD = carrito.map(item => {
+        let texto = `${item.cantidad}x ${item.nombre.trim()}`;
+        
+        // Si hay ingredientes quitados, los agregamos entre paréntesis para que no rompan las métricas
+        if (item.quitados && item.quitados.length > 0) {
+            texto += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
+        }
+        return texto;
+    }).join(' | ');
+
+    // Llamada al guardado con la fecha corregida (+00) y el detalle completo
+    await guardarPedidoEnSupabase({
+        cliente: nombre,
+        detalle: detalleBD,
+        monto: total,
+        metodo_pago: pago,
+        entrega: entrega,
+        direccion: entrega === 'Delivery' ? dir : 'Retira en local'
+    });
+
+    mostrarMensaje("✅ ¡Pedido confirmado! Serás redirigido al chat...", 4000);
+
+    // Mensaje WhatsApp
+    let msg = `TU PEDIDO \n\n*Tu nombre:* ${nombre}\n*Entrega:* ${entrega}\n`;
+    if (entrega === 'Delivery') msg += `*Dirección:* ${dir}\n`;
+    msg += `*Pago:* ${pago}\n\n*PRODUCTOS:*\n`;
+
+    carrito.forEach(item => {
+        msg += `- ${item.cantidad}x ${item.nombre}`;
+        if (item.quitados.length > 0) msg += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
+        msg += `\n`;
+    });
+    msg += `\n*TOTAL: $${total}*\n`;
+
+    setTimeout(() => {
+        window.open(`https://wa.me/5492215383928?text=${encodeURIComponent(msg)}`);
+        carrito = [];
+        actualizarBarra();
+        mostrarPantalla('inicio');
+    }, 2500);
+}
+
+// FUNCIONES AUXILIARES
+function mostrarMensaje(texto, duracion = 2000) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.innerText = texto;
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, duracion);
+}
+
+function irAlCheckout() { mostrarPantalla('checkout'); }
+function toggleDir() {
+    const m = document.getElementById('metodo-entrega').value;
+    const campo = document.getElementById('campo-dir');
+    if (campo) campo.style.display = (m === 'Delivery') ? 'block' : 'none';
+}
+function togglePago() {
+    const metodo = document.getElementById('metodo-pago').value;
+    const infoTransf = document.getElementById('info-transferencia');
+    if (infoTransf) infoTransf.style.display = (metodo === 'Transferencia') ? 'block' : 'none';
+}
+
+function copiarAlias() {
+    const alias = "juanfran11mp";
+    navigator.clipboard.writeText(alias).then(() => {
+        mostrarMensaje("✅ Alias copiado", 2000);
+    });
+}
+
+// INICIALIZACIÓN
+document.addEventListener("DOMContentLoaded", () => {
+    cargarProductosDesdeBD();
+    mostrarPantalla('inicio');
+});
