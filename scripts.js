@@ -239,20 +239,17 @@ async function enviarWhatsApp() {
     const dir = document.getElementById('dir-cliente').value.trim();
     const pago = document.getElementById('metodo-pago').value;
 
-    // Validación básica
     if (!nombre || (entrega === 'Delivery' && !dir)) {
         mostrarMensaje("Completá tus datos ✍️", 3000);
         return;
     }
 
-    // --- BLOQUEO ANTI-DUPLICADOS ---
-    // Seleccionamos el botón específico dentro de la sección checkout
     const btnConfirmar = document.querySelector('#checkout .btn-principal');
     
     if (btnConfirmar) {
-        btnConfirmar.disabled = true; // Evita nuevos clics
-        btnConfirmar.innerText = "⏳ PROCESANDO..."; // Cambio de texto visual
-        btnConfirmar.style.opacity = "0.6"; // Efecto visual de desactivado
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerText = "⏳ PROCESANDO...";
+        btnConfirmar.style.opacity = "0.6";
         btnConfirmar.style.cursor = "not-allowed";
     }
 
@@ -265,7 +262,7 @@ async function enviarWhatsApp() {
     }).join(' | ');
 
     try {
-        // Guardamos en Supabase
+        // Guardamos en la base de datos (Supabase)
         await guardarPedidoEnSupabase({
             cliente: nombre,
             detalle: detalleBD,
@@ -277,7 +274,6 @@ async function enviarWhatsApp() {
 
         mostrarMensaje("✅ ¡Pedido confirmado!", 4000);
 
-        // Armamos el mensaje para WhatsApp
         let msg = `TU PEDIDO \n\n*Tu nombre:* ${nombre}\n*Entrega:* ${entrega}\n`;
         if (entrega === 'Delivery') msg += `*Dirección:* ${dir}\n`;
         msg += `*Pago:* ${pago}\n\n*PRODUCTOS:*\n`;
@@ -289,28 +285,32 @@ async function enviarWhatsApp() {
         });
         msg += `\n*TOTAL: $${total}*\n`;
 
-        // Esperamos un momento para que el usuario vea el mensaje de éxito antes de redirigir
+        // Pequeña espera para que el usuario lea el "Pedido confirmado"
         setTimeout(() => {
-            window.open(`https://wa.me/5492215383928?text=${encodeURIComponent(msg)}`);
+            const wspUrl = `https://wa.me/5492215383928?text=${encodeURIComponent(msg)}`;
             
-            // Limpiamos carrito y restablecemos la interfaz
+            // RESET DE CARRITO ANTES DE SALIR
             carrito = [];
             actualizarBarra();
+
+            // USAMOS location.href EN VEZ DE window.open PARA EVITAR BLOQUEO DE POP-UPS
+            window.location.href = wspUrl;
             
-            if (btnConfirmar) {
-                btnConfirmar.disabled = false;
-                btnConfirmar.innerText = "CONFIRMAR POR WHATSAPP";
-                btnConfirmar.style.opacity = "1";
-                btnConfirmar.style.cursor = "pointer";
-            }
-            
-            mostrarPantalla('inicio');
-        }, 2000);
+            // Por si el usuario vuelve atrás, restauramos el botón
+            setTimeout(() => {
+                if (btnConfirmar) {
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.innerText = "CONFIRMAR POR WHATSAPP";
+                    btnConfirmar.style.opacity = "1";
+                    btnConfirmar.style.cursor = "pointer";
+                }
+                mostrarPantalla('inicio');
+            }, 1000);
+        }, 1500);
 
     } catch (err) {
         console.error(err);
-        mostrarMensaje("❌ Hubo un error. Reintenta.", 3000);
-        // Si falla el guardado, rehabilitamos el botón para que pueda intentar de nuevo
+        mostrarMensaje("❌ Error de conexión. Reintenta.", 3000);
         if (btnConfirmar) {
             btnConfirmar.disabled = false;
             btnConfirmar.innerText = "CONFIRMAR POR WHATSAPP";
