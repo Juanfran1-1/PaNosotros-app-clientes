@@ -75,7 +75,7 @@ async function guardarPedidoEnSupabase(datos) {
                     fecha: fechaParaStreamlit + "+00",
                     detalle: datos.detalle,
                     cliente: datos.cliente,
-                    telefono: datos.telefono, // <-- AGREGAR ESTO (asegurate que la columna en Supabase se llame así)
+                    numero: datos.telefono, // <-- AGREGAR ESTO (asegurate que la columna en Supabase se llame así)
                     monto: parseInt(datos.monto),
                     metodo_pago: datos.metodo_pago,
                     entrega: datos.entrega,
