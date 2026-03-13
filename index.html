@@ -6,8 +6,9 @@
     <title>PA NOSOTROS - MINI BURGERS</title>
     <link rel="stylesheet" href="style.css">
 </head>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <body>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <div id="loader">
         <div class="spinner"></div>
     </div>
@@ -25,16 +26,44 @@
     </div>
 
     <section id="inicio">
-        <img src="Logo.jpg" alt="Logo Pa Nosotros" style="width: 150px; height: 150px; border-radius: 50%; margin: 0 auto 20px auto; display: block; border: 3px solid #d35400; object-fit: cover;">
+        <img src="src/Logo.jpg" alt="Logo Pa Nosotros" style="width: 150px; height: 150px; border-radius: 50%; margin: 0 auto 20px auto; display: block; border: 3px solid #d35400; object-fit: cover;">
         <p style="font-weight: bold; font-size: 1.1rem;">Tu próxima obsesión a un solo click.</p>
+        
         <button class="btn-principal" onclick="mostrarPantalla('menu')">COMENZAR PEDIDO</button>
-        <p id="mensaje-horario" style="margin-top: 15px; color: #ff9f43; font-weight: bold; display: none;"></p>
+        
+        <button onclick="mostrarPantalla('tracking')" style="background:rgba(255,255,255,0.1); border: 1px solid white; color: white; margin-top: 15px; padding: 12px; border-radius: 50px; width: 100%; font-weight: bold; cursor: pointer; font-size: 0.9rem; backdrop-filter: blur(5px);">🔍 VER MI PEDIDO</button>
+        
         <div style="margin-top: 25px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);">
             <h3 style="margin: 0 0 5px 0; font-size: 1.1rem; color: #ff9f43;">Días y Horarios</h3>
             <p style="margin: 0; font-size: 0.9rem; line-height: 1.6;">Sábado de 18:00 a 23:30<br>Domingo de 19:00 a 23:00</p>
         </div>
-    </br>    </br>    </br>
+
+        <br>
         <button class="btn-redes" onclick="window.location.href='https://www.instagram.com/mminiburgers/'">Nuestro instagram</button>
+    </section>
+
+    <section id="tracking" style="display:none;">
+        <div onclick="mostrarPantalla('inicio')" style="position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 1.2rem; background: #332d2b; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;">←</div>
+        
+        <h2 style="margin-top: 40px;">Seguí tu Pedido</h2>
+        <div style="padding: 20px; background: white; border-radius: 20px; margin-top: 20px; border: 1px solid #eee; text-align: center;">
+            <p style="color: #666; margin-bottom: 15px; font-size: 0.9rem;">Ingresá el número de pedido para ver el estado en tiempo real.</p>
+            
+            <input type="number" id="input-tracking" placeholder="Ej: 58" style="width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #ff9f43; font-size: 1.2rem; text-align: center; margin-bottom: 15px; display: block;">
+            
+            <button onclick="consultarEstado()" class="btn-principal">CONSULTAR ESTADO</button>
+
+            <div id="resultado-tracking" style="display: none; margin-top: 30px; padding: 20px; border-radius: 15px; background: #fdfaf5; border: 1px dashed #ccc;">
+                <p style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">ORDEN #<span id="res-id"></span></p>
+                <div id="res-badge" style="display: inline-block; padding: 10px 25px; border-radius: 50px; color: white; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
+                <p style="margin-top: 15px; font-size: 0.75rem; color: #aaa; font-style: italic;">La información se actualiza al volver a consultar.</p>
+            </div>
+        </div>
+
+        <br>
+        <div style="margin: 20px 0 100px 0; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 15px; border: 1px dashed #d35400;">
+            <p style="margin: 0; font-size: 0.9rem; color: #332d2b;">Si tenes alguna duda podes consultar por wsp</p>
+        </div>
     </section>
 
     <section id="menu" style="display:none;">
@@ -88,9 +117,9 @@
         </div>
 
         <div id="info-transferencia" style="display:none;">
-            <p>💳 <strong>Alias:</strong> <span id="alias-texto" style="font-weight: bold; color: #d35400;">juanfran11mp</span></p>
+            <p>💳 <strong>Alias:</strong> <span id="alias-texto" style="font-weight: bold; color: #d35400;">Cargando...</span></p>
             <button class="btn-copiar" onclick="copiarAlias()">📋 COPIAR ALIAS</button>
-            <p style="margin-top:10px; font-size:0.8rem; color:#666;">📲 Enviá el comprobante al WhatsApp: 2215383928</p>
+            <p style="margin-top:10px; font-size:0.8rem; color:#666;">📲 Enviá el comprobante al WhatsApp al finalizar</p>
         </div>
 
         <button class="btn-principal" onclick="enviarWhatsApp()">CONFIRMAR POR WHATSAPP</button>
@@ -98,6 +127,5 @@
     </section>
 
     <script src="scripts.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>

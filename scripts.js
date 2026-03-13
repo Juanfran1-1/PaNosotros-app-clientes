@@ -11,7 +11,50 @@ let cantidadEnDetalle = 1;
 let pantallaDestinoTemporal = null;
 let productos = []; 
 
-// --- NUEVA FUNCIÓN: GUARDAR PEDIDO EN TABLA ---
+let configTienda = {
+    whatsapp: "5492215383928",
+    alias_mp: "juanfran11mp",
+    abierto: true
+};
+
+async function cargarConfiguracion() {
+    try {
+        const { data, error } = await _supabase
+            .from('configuracion')
+            .select('*')
+            .single();
+
+        if (error) throw error;
+        if (data) {
+            configTienda = data;
+
+            // --- ACTUALIZAR EL HTML DINÁMICAMENTE ---
+            
+            // 1. Actualizar Alias en el Checkout
+            const aliasSpan = document.getElementById('alias-texto');
+            if (aliasSpan) aliasSpan.innerText = configTienda.alias_mp;
+
+            // 2. Controlar estado del local
+            if (!configTienda.abierto) {
+                const btnPedido = document.getElementById('btn-comenzar');
+                const statusLocal = document.getElementById('status-local');
+                
+                if (btnPedido) {
+                    btnPedido.innerText = "LOCAL CERRADO";
+                    btnPedido.style.background = "#7f8c8d";
+                    btnPedido.disabled = true; // Opcional: deshabilitar el botón
+                }
+                if (statusLocal) statusLocal.style.display = 'block';
+            }
+
+            console.log("Configuración cargada ✅");
+        }
+    } catch (err) {
+        console.error("Error cargando configuración:", err);
+    }
+}
+
+// --- NUEVA FUNCIÓN: GUARDAR PEDIDO EN TABLA Y DEVOLVER ID ---
 async function guardarPedidoEnSupabase(datos) {
     try {
         const ahora = new Date();
@@ -23,11 +66,9 @@ async function guardarPedidoEnSupabase(datos) {
             String(ahora.getMinutes()).padStart(2, '0') + ":" + 
             String(ahora.getSeconds()).padStart(2, '0');
 
-        // Si el cliente eligió 'Transferencia', el estado es 'Pendiente de Pago'
-        // Si eligió 'Efectivo', el estado es 'Cocinando' (porque se paga al final)
         const estadoInicial = (datos.metodo_pago === 'Transferencia') ? "Pendiente de Pago" : "Cocinando";
 
-        const { error } = await _supabase
+        const { data, error } = await _supabase
             .from('pedidos')
             .insert([
                 {
@@ -40,11 +81,72 @@ async function guardarPedidoEnSupabase(datos) {
                     direccion: datos.direccion,
                     estado: estadoInicial 
                 }
-            ]);
+            ]).select(); // .select() es clave para obtener el ID generado
 
         if (error) throw error;
+        return data[0].id; // Retornamos el ID
     } catch (err) {
         console.error("Error al guardar pedido:", err);
+        return null;
+    }
+}
+
+// --- FUNCIÓN PARA CONSULTAR ESTADO DEL PEDIDO ---
+async function consultarEstado() {
+    const input = document.getElementById('input-tracking');
+    const nroPedido = parseInt(input.value);
+
+    if (!nroPedido) {
+        mostrarMensaje("Ingresá un número válido 🔢");
+        return;
+    }
+
+    // 1. Calculamos el tiempo límite (Ahora - 24 horas)
+    const limite = new Date();
+    limite.setHours(limite.getHours() - 24);
+    const limiteISO = limite.toISOString(); // Esto genera algo como "2023-10-27T14:00:00Z"
+
+    const resDiv = document.getElementById('resultado-tracking');
+    const resBadge = document.getElementById('res-badge');
+    const resId = document.getElementById('res-id');
+
+    try {
+        // 2. Consultamos con el filtro de fecha
+        const { data, error } = await _supabase
+            .from('pedidos')
+            .select('id, estado, fecha')
+            .eq('id', nroPedido)
+            .gt('fecha', limiteISO) // "fecha" mayor a "hace 24hs"
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+            // SI LO ENCONTRÓ Y ES RECIENTE
+            resDiv.style.display = 'block';
+            resId.innerText = data.id;
+
+            const estados = {
+                "Pendiente de Pago": { txt: "⏳ Pedido recibido", color: "#e67e22" },
+                "Cocinando": { txt: "👨‍🍳 EN COCINA", color: "#3498db" },
+                "Terminado": { txt: "✅ ¡LISTO!", color: "#2ecc71" },
+                "Rechazado": { txt: "❌ CANCELADO", color: "#e74c3c" }
+            };
+
+            const actual = estados[data.estado] || { txt: data.estado, color: "#95a5a6" };
+            resBadge.innerText = actual.txt;
+            resBadge.style.backgroundColor = actual.color;
+
+
+        } else {
+            // SI NO EXISTE O TIENE MÁS DE 24 HORAS
+            resDiv.style.display = 'none';
+            mostrarMensaje("Pedido no encontrado o expirado ❌");
+        }
+
+    } catch (err) {
+        console.error("Error en tracking:", err);
+        mostrarMensaje("Error al conectar ❌");
     }
 }
 
@@ -56,7 +158,7 @@ async function cargarProductosDesdeBD() {
         
         productos = data.map(p => ({
             ...p,
-            foto: p.foto || 'Logo.jpg',
+            foto: p.foto ? `src/${p.foto}` : 'src/Logo.jpg', 
             desc: p.desc || 'Combo de 5 mini burgers + papas noisette.',
             ingredientes: p.ingredientes ? p.ingredientes.split(',').map(i => i.trim()) : ['Cheddar', 'Panceta', 'Pepinillos']
         }));
@@ -244,6 +346,12 @@ function eliminarDelCarrito(index) {
 
 // 8. ENVÍO A WHATSAPP Y GUARDADO EN BD
 async function enviarWhatsApp() {
+    // 1. Validar si el local está abierto (Dato de la nueva tabla)
+    if (!configTienda.abierto) {
+        mostrarMensaje("El local está cerrado en este momento 😴", 4000);
+        return;
+    }
+
     const nombre = document.getElementById('nombre-cliente').value.trim();
     const entrega = document.getElementById('metodo-entrega').value;
     const dir = document.getElementById('dir-cliente').value.trim();
@@ -272,8 +380,8 @@ async function enviarWhatsApp() {
     }).join(' | ');
 
     try {
-        // Guardamos en la base de datos (Supabase)
-        await guardarPedidoEnSupabase({
+        // Guardamos y obtenemos el ID
+        const idGenerado = await guardarPedidoEnSupabase({
             cliente: nombre,
             detalle: detalleBD,
             monto: total,
@@ -284,7 +392,8 @@ async function enviarWhatsApp() {
 
         mostrarMensaje("✅ ¡Pedido confirmado!", 4000);
 
-        let msg = `TU PEDIDO \n\n*Tu nombre:* ${nombre}\n*Entrega:* ${entrega}\n`;
+        let msg = `🍔 *PEDIDO #${idGenerado || 'N/A'}* 🍔\n\n`;
+        msg += `*Cliente:* ${nombre}\n*Entrega:* ${entrega}\n`;
         if (entrega === 'Delivery') msg += `*Dirección:* ${dir}\n`;
         msg += `*Pago:* ${pago}\n\n*PRODUCTOS:*\n`;
 
@@ -293,20 +402,17 @@ async function enviarWhatsApp() {
             if (item.quitados.length > 0) msg += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
             msg += `\n`;
         });
-        msg += `\n*TOTAL: $${total}*\n`;
+        msg += `\n*TOTAL: $${total}*\n\n`;
+        msg += `Podes consultar el estado de tu pedido con el número *#${idGenerado}* en nuestra web.`;
 
-        // Pequeña espera para que el usuario lea el "Pedido confirmado"
         setTimeout(() => {
-            const wspUrl = `https://wa.me/5492215383928?text=${encodeURIComponent(msg)}`;
+            // 2. Usar el número de WhatsApp dinámico de la tabla configuracion
+            const wspUrl = `https://wa.me/${configTienda.whatsapp}?text=${encodeURIComponent(msg)}`;
             
-            // RESET DE CARRITO ANTES DE SALIR
             carrito = [];
             actualizarBarra();
-
-            // USAMOS location.href EN VEZ DE window.open PARA EVITAR BLOQUEO DE POP-UPS
             window.location.href = wspUrl;
             
-            // Por si el usuario vuelve atrás, restauramos el botón
             setTimeout(() => {
                 if (btnConfirmar) {
                     btnConfirmar.disabled = false;
@@ -351,13 +457,14 @@ function togglePago() {
 }
 
 function copiarAlias() {
-    const alias = "juanfran11mp";
+    const alias = configTienda.alias_mp; // CAMBIO: Antes era fijo
     navigator.clipboard.writeText(alias).then(() => {
         mostrarMensaje("✅ Alias copiado", 2000);
     });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    await cargarConfiguracion(); 
     cargarProductosDesdeBD();
     mostrarPantalla('inicio');
     toggleDir(); 
