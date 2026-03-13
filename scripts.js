@@ -23,6 +23,10 @@ async function guardarPedidoEnSupabase(datos) {
             String(ahora.getMinutes()).padStart(2, '0') + ":" + 
             String(ahora.getSeconds()).padStart(2, '0');
 
+        // Si el cliente eligió 'Transferencia', el estado es 'Pendiente de Pago'
+        // Si eligió 'Efectivo', el estado es 'Cocinando' (porque se paga al final)
+        const estadoInicial = (datos.metodo_pago === 'Transferencia') ? "Pendiente de Pago" : "Cocinando";
+
         const { error } = await _supabase
             .from('pedidos')
             .insert([
@@ -34,7 +38,7 @@ async function guardarPedidoEnSupabase(datos) {
                     metodo_pago: datos.metodo_pago,
                     entrega: datos.entrega,
                     direccion: datos.direccion,
-                    estado: "Pendiente de Pago"
+                    estado: estadoInicial 
                 }
             ]);
 
@@ -90,7 +94,13 @@ function ejecutarCambioPantalla(idPantalla) {
             target.style.display = (idPantalla === 'inicio') ? 'flex' : 'block';
         }
         if (idPantalla === 'menu') cargarMenu();
-        if (idPantalla === 'checkout') actualizarResumenCheckout();
+        
+        if (idPantalla === 'checkout') {
+            actualizarResumenCheckout();
+            toggleDir();
+            togglePago(); 
+        }
+
         if (loader) loader.style.display = 'none';
         window.scrollTo(0, 0);
     }, 300);
@@ -347,8 +357,8 @@ function copiarAlias() {
     });
 }
 
-// INICIALIZACIÓN
 document.addEventListener("DOMContentLoaded", () => {
     cargarProductosDesdeBD();
     mostrarPantalla('inicio');
+    toggleDir(); 
 });
