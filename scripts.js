@@ -40,7 +40,7 @@ async function cargarConfiguracion() {
                 const statusLocal = document.getElementById('status-local');
                 
                 if (btnPedido) {
-                    btnPedido.innerText = "LOCAL CERRADO";
+                    btnPedido.innerText = " LOCAL CERRADO ";
                     btnPedido.style.background = "#7f8c8d";
                     btnPedido.disabled = true; // Opcional: deshabilitar el botón
                 }
