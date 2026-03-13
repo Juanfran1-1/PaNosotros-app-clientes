@@ -40,7 +40,7 @@ async function cargarConfiguracion() {
                 const statusLocal = document.getElementById('status-local');
                 
                 if (btnPedido) {
-                    btnPedido.innerText = " LOCAL CERRADO ";
+                    btnPedido.innerText = "LOCAL CERRADO";
                     btnPedido.style.background = "#7f8c8d";
                     btnPedido.disabled = true; // Opcional: deshabilitar el botón
                 }
@@ -101,45 +101,56 @@ async function consultarEstado() {
         return;
     }
 
-    // 1. Calculamos el tiempo límite (Ahora - 24 horas)
     const limite = new Date();
     limite.setHours(limite.getHours() - 24);
-    const limiteISO = limite.toISOString(); // Esto genera algo como "2023-10-27T14:00:00Z"
+    const limiteISO = limite.toISOString();
 
     const resDiv = document.getElementById('resultado-tracking');
     const resBadge = document.getElementById('res-badge');
     const resId = document.getElementById('res-id');
 
     try {
-        // 2. Consultamos con el filtro de fecha
         const { data, error } = await _supabase
             .from('pedidos')
-            .select('id, estado, fecha')
+            .select('id, estado, fecha, metodo_pago') // Traemos tambien el metodo de pago
             .eq('id', nroPedido)
-            .gt('fecha', limiteISO) // "fecha" mayor a "hace 24hs"
+            .gt('fecha', limiteISO)
             .maybeSingle();
 
         if (error) throw error;
 
         if (data) {
-            // SI LO ENCONTRÓ Y ES RECIENTE
             resDiv.style.display = 'block';
             resId.innerText = data.id;
 
-            const estados = {
-                "Pendiente de Pago": { txt: "⏳ Pedido recibido", color: "#e67e22" },
-                "Cocinando": { txt: "👨‍🍳 EN COCINA", color: "#3498db" },
-                "Terminado": { txt: "✅ ¡LISTO!", color: "#2ecc71" },
-                "Rechazado": { txt: "❌ CANCELADO", color: "#e74c3c" }
-            };
+            // --- LÓGICA DE TRADUCCIÓN DE ESTADOS ---
+            let estadoVisual = { txt: data.estado, color: "#95a5a6" };
 
-            const actual = estados[data.estado] || { txt: data.estado, color: "#95a5a6" };
-            resBadge.innerText = actual.txt;
-            resBadge.style.backgroundColor = actual.color;
+            if (data.metodo_pago === "Transferencia") {
+                // Flujo para Transferencia
+                const estadosTransf = {
+                    "Pendiente de Pago": { txt: "⏳ Esperando comprobante", color: "#e67e22" },
+                    "Cocinando": { txt: "👨‍🍳 EN COCINA", color: "#3498db" },
+                    "Terminado": { txt: "✅ ¡LISTO!", color: "#2ecc71" },
+                    "Rechazado": { txt: "❌ CANCELADO", color: "#e74c3c" }
+                };
+                estadoVisual = estadosTransf[data.estado] || estadoVisual;
+            } else {
+                // Flujo para Efectivo (u otros)
+                const estadosEfectivo = {
+                    // Si en la base dice 'Pendiente de Pago' pero es Efectivo, el cliente ve 'En Cocina'
+                    "Pendiente de Pago": { txt: "✅ ¡LISTO!", color: "#2ecc71" }, 
+                    "Cocinando": { txt: "👨‍🍳 EN COCINA", color: "#3498db" },
+                    "Terminado": { txt: "✅ ¡LISTO!", color: "#2ecc71" },
+                    "Rechazado": { txt: "❌ CANCELADO", color: "#e74c3c" }
+                };
+                estadoVisual = estadosEfectivo[data.estado] || estadoVisual;
+            }
 
+            resBadge.innerText = estadoVisual.txt;
+            resBadge.style.backgroundColor = estadoVisual.color;
 
         } else {
-            // SI NO EXISTE O TIENE MÁS DE 24 HORAS
             resDiv.style.display = 'none';
             mostrarMensaje("Pedido no encontrado o expirado ❌");
         }
