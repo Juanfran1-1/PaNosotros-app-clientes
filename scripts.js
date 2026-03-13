@@ -75,16 +75,17 @@ async function guardarPedidoEnSupabase(datos) {
                     fecha: fechaParaStreamlit + "+00",
                     detalle: datos.detalle,
                     cliente: datos.cliente,
+                    telefono: datos.telefono, // <-- AGREGAR ESTO (asegurate que la columna en Supabase se llame así)
                     monto: parseInt(datos.monto),
                     metodo_pago: datos.metodo_pago,
                     entrega: datos.entrega,
                     direccion: datos.direccion,
                     estado: estadoInicial 
                 }
-            ]).select(); // .select() es clave para obtener el ID generado
+            ]).select();
 
         if (error) throw error;
-        return data[0].id; // Retornamos el ID
+        return data[0].id;
     } catch (err) {
         console.error("Error al guardar pedido:", err);
         return null;
@@ -364,6 +365,7 @@ async function enviarWhatsApp() {
     }
 
     const nombre = document.getElementById('nombre-cliente').value.trim();
+    const telefono = document.getElementById('telefono-cliente').value.trim(); 
     const entrega = document.getElementById('metodo-entrega').value;
     const dir = document.getElementById('dir-cliente').value.trim();
     const pago = document.getElementById('metodo-pago').value;
@@ -394,6 +396,7 @@ async function enviarWhatsApp() {
         // Guardamos y obtenemos el ID
         const idGenerado = await guardarPedidoEnSupabase({
             cliente: nombre,
+            telefono: telefono, // <-- NUEVO
             detalle: detalleBD,
             monto: total,
             metodo_pago: pago,
