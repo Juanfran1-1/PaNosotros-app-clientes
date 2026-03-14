@@ -66,7 +66,9 @@ async function guardarPedidoEnSupabase(datos) {
             String(ahora.getMinutes()).padStart(2, '0') + ":" + 
             String(ahora.getSeconds()).padStart(2, '0');
 
-        const estadoInicial = (datos.metodo_pago === 'Transferencia') ? "Pendiente de Pago" : "Cocinando";
+        const estadoInicial = (datos.metodo_pago === 'Mercado Pago' || datos.metodo_pago === 'Transferencia') 
+            ? "Pendiente de Pago" 
+            : "Cocinando";
 
         const { data, error } = await _supabase
             .from('pedidos')
@@ -113,7 +115,7 @@ async function consultarEstado() {
     try {
         const { data, error } = await _supabase
             .from('pedidos')
-            .select('id, estado, fecha, metodo_pago') // Traemos tambien el metodo de pago
+            .select('id, estado, fecha, metodo_pago') 
             .eq('id', nroPedido)
             .gt('fecha', limiteISO)
             .maybeSingle();
@@ -128,7 +130,6 @@ async function consultarEstado() {
             let estadoVisual = { txt: data.estado, color: "#95a5a6" };
 
             if (data.metodo_pago === "Transferencia") {
-                // Flujo para Transferencia
                 const estadosTransf = {
                     "Pendiente de Pago": { txt: "⏳ Esperando comprobante", color: "#e67e22" },
                     "Cocinando": { txt: "👨‍🍳 EN COCINA", color: "#3498db" },
@@ -136,10 +137,21 @@ async function consultarEstado() {
                     "Rechazado": { txt: "❌ CANCELADO", color: "#e74c3c" }
                 };
                 estadoVisual = estadosTransf[data.estado] || estadoVisual;
+
+            } else if (data.metodo_pago === "Mercado Pago") {
+                // NUEVO: Flujo para Mercado Pago
+                const estadosMP = {
+                    "Pendiente de Pago": { txt: "⏳ ESPERANDO PAGO", color: "#e67e22" },
+                    "Pagado": { txt: "✅ PAGO RECIBIDO", color: "#2ecc71" }, // Este lo pondrá Make
+                    "Cocinando": { txt: "👨‍🍳 EN COCINA", color: "#3498db" },
+                    "Terminado": { txt: "✅ ¡LISTO!", color: "#2ecc71" },
+                    "Rechazado": { txt: "❌ CANCELADO", color: "#e74c3c" }
+                };
+                estadoVisual = estadosMP[data.estado] || estadoVisual;
+
             } else {
-                // Flujo para Efectivo (u otros)
+                // Flujo para Efectivo (u otros) - NO CAMBIADO
                 const estadosEfectivo = {
-                    // Si en la base dice 'Pendiente de Pago' pero es Efectivo, el cliente ve 'En Cocina'
                     "Pendiente de Pago": { txt: "✅ ¡LISTO!", color: "#2ecc71" }, 
                     "Cocinando": { txt: "👨‍🍳 EN COCINA", color: "#3498db" },
                     "Terminado": { txt: "✅ ¡LISTO!", color: "#2ecc71" },
@@ -358,7 +370,6 @@ function eliminarDelCarrito(index) {
 
 // 8. ENVÍO A WHATSAPP Y GUARDADO EN BD
 async function enviarWhatsApp() {
-    // 1. Validar si el local está abierto (Dato de la nueva tabla)
     if (!configTienda.abierto) {
         mostrarMensaje("El local está cerrado en este momento 😴", 4000);
         return;
@@ -377,6 +388,69 @@ async function enviarWhatsApp() {
 
     const btnConfirmar = document.querySelector('#checkout .btn-principal');
     
+    // --- LÓGICA PARA MERCADO PAGO ---
+    if (pago === 'Mercado Pago') {
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerText = "⏳ GUARDANDO PEDIDO...";
+        btnConfirmar.style.opacity = "0.7";
+
+        try {
+            // 1. Guardamos el detalle para la base de datos
+            const detalleBD = carrito.map(item => {
+                let texto = `${item.cantidad}x ${item.nombre.trim()}`;
+                if (item.quitados?.length > 0) texto += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
+                return texto;
+            }).join(' | ');
+
+            // 2. Guardamos en Supabase para obtener el ID
+            const idGenerado = await guardarPedidoEnSupabase({
+                cliente: nombre,
+                telefono: telefono,
+                detalle: detalleBD,
+                monto: total,
+                metodo_pago: pago,
+                entrega: entrega,
+                direccion: entrega === 'Delivery' ? dir : 'Retira en local'
+            });
+
+            if (idGenerado) {
+                btnConfirmar.innerText = "✅ PEDIDO #"+idGenerado+" GUARDADO";
+                mostrarMensaje("Redirigiendo al pago en 4 segundos...", 4000);
+
+                // 3. Llamada a Make para obtener el link de Mercado Pago
+                const response = await fetch("https://hook.us2.make.com/ht9xg0bn4pbfnm63gef2tw4b1b35pg1e", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        id: idGenerado,
+                        monto: total,
+                        cliente: nombre
+                    })
+                });
+
+                const data = await response.json();
+
+                // 4. Espera de 4 segundos y redirección
+                setTimeout(() => {
+                    if (data.init_point) {
+                        window.location.href = data.init_point;
+                    } else {
+                        alert("Error al generar link de pago. Intentá de nuevo.");
+                        btnConfirmar.disabled = false;
+                        btnConfirmar.innerText = "GENERAR LINK DE PAGO";
+                    }
+                }, 4000);
+            }
+            return; // Cortamos la ejecución aquí para MP
+        } catch (err) {
+            console.error(err);
+            mostrarMensaje("❌ Error al procesar pago", 3000);
+            btnConfirmar.disabled = false;
+            return;
+        }
+    }
+
+    // --- LÓGICA ORIGINAL PARA WHATSAPP (Efectivo/Transferencia) ---
     if (btnConfirmar) {
         btnConfirmar.disabled = true;
         btnConfirmar.innerText = "⏳ PROCESANDO...";
@@ -467,7 +541,19 @@ function toggleDir() {
 function togglePago() {
     const metodo = document.getElementById('metodo-pago').value;
     const infoTransf = document.getElementById('info-transferencia');
+    const btnConfirmar = document.querySelector('#checkout .btn-principal'); // Buscamos el botón del checkout
+
     if (infoTransf) infoTransf.style.display = (metodo === 'Transferencia') ? 'block' : 'none';
+
+    if (btnConfirmar) {
+        if (metodo === 'Mercado Pago') {
+            btnConfirmar.innerText = "GENERAR LINK DE PAGO";
+            btnConfirmar.style.background = "#009EE3"; // Azul Mercado Pago
+        } else {
+            btnConfirmar.innerText = "CONFIRMAR POR WHATSAPP";
+            btnConfirmar.style.background = "var(--naranja)"; // Tu color original
+        }
+    }
 }
 
 function copiarAlias() {
