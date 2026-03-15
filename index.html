@@ -17,10 +17,10 @@
 
     <div id="modal-confirmacion" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; padding:20px;">
         <div style="background:white; padding:25px; border-radius:20px; text-align:center; max-width:320px; width:100%; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-            <p style="color:#333; font-weight:bold; margin-bottom:20px; font-size:1.1rem;">¿Deseas eliminar el pedido actual y volver al inicio?</p>
+            <p id="modal-texto" style="color:#333; font-weight:bold; margin-bottom:20px; font-size:1.1rem;">¿Deseas eliminar el pedido actual y volver al inicio?</p>
             <div style="display:flex; gap:10px;">
-                <button onclick="cerrarConfirmacion(false)" style="flex:1; padding:12px; border-radius:12px; border:1px solid #ccc; background:white; font-weight:bold; cursor:pointer;">NO</button>
-                <button onclick="cerrarConfirmacion(true)" style="flex:1; padding:12px; border-radius:12px; border:none; background:#d35400; color:white; font-weight:bold; cursor:pointer;">SÍ, SALIR</button>
+                <button id="btn-modal-no" onclick="cerrarConfirmacion(false)" style="flex:1; padding:12px; border-radius:12px; border:1px solid #ccc; background:white; font-weight:bold; cursor:pointer;">NO</button>
+                <button id="btn-modal-si" onclick="cerrarConfirmacion(true)" style="flex:1; padding:12px; border-radius:12px; border:none; background:#d35400; color:white; font-weight:bold; cursor:pointer;">SÍ, SALIR</button>
             </div>
         </div>
     </div>
@@ -29,7 +29,9 @@
         <img src="src/Logo.jpg" alt="Logo Pa Nosotros" style="width: 150px; height: 150px; border-radius: 50%; margin: 0 auto 20px auto; display: block; border: 3px solid #d35400; object-fit: cover;">
         <p style="font-weight: bold; font-size: 1.1rem;">Tu próxima obsesión a un solo click.</p>
         
-        <button class="btn-principal" onclick="mostrarPantalla('menu')">COMENZAR PEDIDO</button>
+        <div id="status-local" style="display:none; background:#e74c3c; color:white; padding:10px; border-radius:10px; margin-bottom:15px; font-weight:bold; text-align:center;">LOCAL CERRADO POR AHORA</div>
+        
+        <button id="btn-comenzar" class="btn-principal" onclick="mostrarPantalla('menu')">COMENZAR PEDIDO</button>
         
         <button onclick="mostrarPantalla('tracking')" style="background:rgba(255,255,255,0.1); border: 1px solid white; color: white; margin-top: 15px; padding: 12px; border-radius: 50px; width: 100%; font-weight: bold; cursor: pointer; font-size: 0.9rem; backdrop-filter: blur(5px);">🔍 VER MI PEDIDO</button>
         
@@ -97,7 +99,8 @@
     </section>
 
     <section id="checkout" style="display:none;">
-        <h2>Tu Pedido</h2>
+        <div onclick="mostrarPantalla('menu')" style="position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 1.2rem; background: #332d2b; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;">←</div>
+        <h2 style="margin-top: 40px;">Tu Pedido</h2>
         <div id="resumen-pedido"></div>
         <div class="form-group"><label>Tu Nombre:</label><input type="text" id="nombre-cliente" placeholder="Ej: Juan"></div>
         <div class="form-group">
@@ -127,8 +130,8 @@
             <p style="margin-top:10px; font-size:0.8rem; color:#666;">📲 Enviá el comprobante al WhatsApp al finalizar</p>
         </div>
 
-        <button class="btn-principal" onclick="enviarWhatsApp()">CONFIRMAR POR WHATSAPP</button>
-        <p onclick="mostrarPantalla('menu')" style="cursor:pointer; color:gray; margin-top:20px;">⬅ Volver al menú</p>
+        <button id="btn-confirmar-pedido" class="btn-principal" onclick="enviarWhatsApp()">CONFIRMAR POR WHATSAPP</button>
+        <p onclick="mostrarPantalla('menu')" style="cursor:pointer; color:gray; margin-top:20px; text-align: center;">⬅ Volver al menú</p>
     </section>
 
     <script src="scripts.js"></script>
