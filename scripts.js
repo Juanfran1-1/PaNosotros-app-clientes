@@ -17,17 +17,6 @@ let configTienda = {
     abierto: true
 };
 
-let pedidoActivoId = null; 
-let urlTemporalMP = null;
-
-function obtenerDetalleTexto() {
-    return carrito.map(item => {
-        let texto = `${item.cantidad}x ${item.nombre.trim()}`;
-        if (item.quitados?.length > 0) texto += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
-        return texto;
-    }).join(' | ');
-}
-
 async function cargarConfiguracion() {
     try {
         const { data, error } = await _supabase
@@ -195,9 +184,7 @@ async function cargarProductosDesdeBD() {
             ...p,
             foto: p.foto ? `src/${p.foto}` : 'src/Logo.jpg', 
             desc: p.desc || 'Combo de 5 mini burgers + papas noisette.',
-            ingredientes: p.ingredientes ? p.ingredientes.split(',').map(i => i.trim()) : [],
-            // Usamos la columna 'disponible' de tu base de datos
-            disponible: p.disponible 
+            ingredientes: p.ingredientes ? p.ingredientes.split(',').map(i => i.trim()) : ['Cheddar', 'Panceta', 'Pepinillos']
         }));
 
         const loader = document.getElementById('loader');
@@ -260,22 +247,16 @@ function cargarMenu() {
     const contenedor = document.getElementById('contenedor-menu');
     if (!contenedor) return;
     contenedor.innerHTML = "";
-    
     productos.forEach(p => {
-        // Si 'disponible' es false, aplicamos la clase que creaste en CSS
-        const estaAgotado = p.disponible === false;
-        const claseCard = estaAgotado ? "card sin-stock" : "card";
-        
         contenedor.innerHTML += `
-            <div class="${claseCard}" onclick="${estaAgotado ? '' : `abrirDetalle(${p.id})`}">
+            <div class="card" onclick="abrirDetalle(${p.id})">
                 <img src="${p.foto}" class="img-producto" onerror="this.src='Logo.jpg'">
                 <div class="info">
                     <h3>${p.nombre}</h3>
                     <span class="desc-texto">${p.desc}</span>
                     <p>$${p.precio}</p>
-                    ${estaAgotado ? '<span class="badge-sin-stock">AGOTADO</span>' : ''}
                 </div>
-                <button class="btn-op">${estaAgotado ? '✕' : '+'}</button>
+                <button class="btn-op">+</button>
             </div>`;
     });
     actualizarBarra();
@@ -394,84 +375,102 @@ async function enviarWhatsApp() {
         return;
     }
 
-    // 1. VALIDACIÓN DE STOCK (SIEMPRE AL INTENTAR PAGAR/CONFIRMAR)
-    const checkStock = await verificarStockCarrito();
-    if (!checkStock.ok) {
-        alert(`Lo sentimos, "${checkStock.nombre}" se agotó. Por favor, quítalo del carrito.`);
-        return; 
-    }
-
     const nombre = document.getElementById('nombre-cliente').value.trim();
+    const telefono = document.getElementById('telefono-cliente').value.trim(); 
+    const entrega = document.getElementById('metodo-entrega').value;
+    const dir = document.getElementById('dir-cliente').value.trim();
     const pago = document.getElementById('metodo-pago').value;
-    const btnConfirmar = document.querySelector('#checkout .btn-principal');
 
-    if (pago === 'Mercado Pago') {
-        // SI YA EXISTE EL LINK Y EL PEDIDO, REDIRIGIR DIRECTAMENTE
-        if (pedidoActivoId && urlTemporalMP) {
-            window.location.href = urlTemporalMP;
-            return;
-        }
-
-        btnConfirmar.disabled = true;
-        btnConfirmar.innerText = "⏳ PROCESANDO...";
-
-        try {
-            const detalleBD = obtenerDetalleTexto();
-            
-            // Si no hay pedido activo, lo creamos. Si hay, se asume que ya se actualizó en el carrito.
-            if (!pedidoActivoId) {
-                pedidoActivoId = await guardarPedidoEnSupabase({
-                    cliente: nombre,
-                    telefono: document.getElementById('telefono-cliente').value,
-                    detalle: detalleBD,
-                    monto: total,
-                    metodo_pago: pago,
-                    entrega: document.getElementById('metodo-entrega').value,
-                    direccion: document.getElementById('dir-cliente').value || 'Retira en local'
-                });
-                await descontarStockBaseDeDatos();
-            }
-
-            // Pedimos el link a Make (siempre lo pedimos de nuevo por si cambió el total)
-            const response = await fetch("https://hook.us2.make.com/ht9xg0bn4pbfnm63gef2tw4b1b35pg1e", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: pedidoActivoId, monto: total, cliente: nombre })
-            });
-            const data = await response.json();
-            urlTemporalMP = data.init_point;
-
-            // Feedback: Modal informativo
-            document.getElementById('modal-texto').innerHTML = `¡Pedido <b>#${pedidoActivoId}</b> listo!<br><br>¿Deseas pagar ahora o revisar tu pedido?`;
-            document.getElementById('btn-modal-si').innerText = "IR A PAGAR";
-            document.getElementById('btn-modal-no').innerText = "REVISAR";
-            
-            accionConfirmacion = 'pagar_mp'; // Nueva acción para el modal
-            document.getElementById('modal-confirmacion').style.display = 'flex';
-
-            // El botón principal ahora solo redirige
-            btnConfirmar.disabled = false;
-            btnConfirmar.innerText = `PAGAR PEDIDO #${pedidoActivoId} ($${total})`;
-            btnConfirmar.style.background = "#00c853"; 
-
-        } catch (err) {
-            console.error(err);
-            mostrarMensaje("Error al conectar con el pago ❌");
-            btnConfirmar.disabled = false;
-        }
+    if (!nombre || (entrega === 'Delivery' && !dir)) {
+        mostrarMensaje("Completá tus datos ✍️", 3000);
         return;
     }
-    // --- LÓGICA PARA WHATSAPP (Efectivo/Transferencia) ---
+
+    const btnConfirmar = document.querySelector('#checkout .btn-principal');
+    
+    // --- LÓGICA PARA MERCADO PAGO ---
+    if (pago === 'Mercado Pago') {
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerText = "⏳ GUARDANDO PEDIDO...";
+        btnConfirmar.style.opacity = "0.7";
+
+        try {
+            // 1. Guardamos el detalle para la base de datos
+            const detalleBD = carrito.map(item => {
+                let texto = `${item.cantidad}x ${item.nombre.trim()}`;
+                if (item.quitados?.length > 0) texto += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
+                return texto;
+            }).join(' | ');
+
+            // 2. Guardamos en Supabase para obtener el ID
+            const idGenerado = await guardarPedidoEnSupabase({
+                cliente: nombre,
+                telefono: telefono,
+                detalle: detalleBD,
+                monto: total,
+                metodo_pago: pago,
+                entrega: entrega,
+                direccion: entrega === 'Delivery' ? dir : 'Retira en local'
+            });
+
+            if (idGenerado) {
+                btnConfirmar.innerText = "✅ PEDIDO #"+idGenerado+" GUARDADO";
+                mostrarMensaje("Redirigiendo al pago en 4 segundos...", 4000);
+
+                // 3. Llamada a Make para obtener el link de Mercado Pago
+                const response = await fetch("https://hook.us2.make.com/ht9xg0bn4pbfnm63gef2tw4b1b35pg1e", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        id: idGenerado,
+                        monto: total,
+                        cliente: nombre
+                    })
+                });
+
+                const data = await response.json();
+
+                // 4. Espera de 4 segundos y redirección
+                setTimeout(() => {
+                    if (data.init_point) {
+                        window.location.href = data.init_point;
+                    } else {
+                        alert("Error al generar link de pago. Intentá de nuevo.");
+                        btnConfirmar.disabled = false;
+                        btnConfirmar.innerText = "GENERAR LINK DE PAGO";
+                    }
+                }, 4000);
+            }
+            return; // Cortamos la ejecución aquí para MP
+        } catch (err) {
+            console.error(err);
+            mostrarMensaje("❌ Error al procesar pago", 3000);
+            btnConfirmar.disabled = false;
+            return;
+        }
+    }
+
+    // --- LÓGICA ORIGINAL PARA WHATSAPP (Efectivo/Transferencia) ---
     if (btnConfirmar) {
         btnConfirmar.disabled = true;
         btnConfirmar.innerText = "⏳ PROCESANDO...";
         btnConfirmar.style.opacity = "0.6";
+        btnConfirmar.style.cursor = "not-allowed";
     }
 
+    const detalleBD = carrito.map(item => {
+        let texto = `${item.cantidad}x ${item.nombre.trim()}`;
+        if (item.quitados && item.quitados.length > 0) {
+            texto += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
+        }
+        return texto;
+    }).join(' | ');
+
     try {
+        // Guardamos y obtenemos el ID
         const idGenerado = await guardarPedidoEnSupabase({
             cliente: nombre,
-            telefono: telefono,
+            telefono: telefono, // <-- NUEVO
             detalle: detalleBD,
             monto: total,
             metodo_pago: pago,
@@ -479,45 +478,43 @@ async function enviarWhatsApp() {
             direccion: entrega === 'Delivery' ? dir : 'Retira en local'
         });
 
-        if (idGenerado) {
-            // --- ACTUALIZACIÓN DE STOCK ---
-            await descontarStockBaseDeDatos();
+        mostrarMensaje("✅ ¡Pedido confirmado!", 4000);
 
-            mostrarMensaje("✅ ¡Pedido confirmado!", 4000);
+        let msg = `🍔 *PEDIDO #${idGenerado || 'N/A'}* 🍔\n\n`;
+        msg += `*Cliente:* ${nombre}\n*Entrega:* ${entrega}\n`;
+        if (entrega === 'Delivery') msg += `*Dirección:* ${dir}\n`;
+        msg += `*Pago:* ${pago}\n\n*PRODUCTOS:*\n`;
 
-            let msg = `🍔 *PEDIDO #${idGenerado}* 🍔\n\n`;
-            msg += `*Cliente:* ${nombre}\n*Entrega:* ${entrega}\n`;
-            if (entrega === 'Delivery') msg += `*Dirección:* ${dir}\n`;
-            msg += `*Pago:* ${pago}\n\n*PRODUCTOS:*\n`;
+        carrito.forEach(item => {
+            msg += `- ${item.cantidad}x ${item.nombre}`;
+            if (item.quitados.length > 0) msg += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
+            msg += `\n`;
+        });
+        msg += `\n*TOTAL: $${total}*\n\n`;
+        msg += `Podes consultar el estado de tu pedido con el número *#${idGenerado}* en nuestra web.`;
 
-            carrito.forEach(item => {
-                msg += `- ${item.cantidad}x ${item.nombre}`;
-                if (item.quitados.length > 0) msg += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
-                msg += `\n`;
-            });
-            msg += `\n*TOTAL: $${total}*\n\n`;
-            msg += `Podes consultar el estado en nuestra web.`;
-
+        setTimeout(() => {
+            // 2. Usar el número de WhatsApp dinámico de la tabla configuracion
+            const wspUrl = `https://wa.me/${configTienda.whatsapp}?text=${encodeURIComponent(msg)}`;
+            
+            carrito = [];
+            actualizarBarra();
+            window.location.href = wspUrl;
+            
             setTimeout(() => {
-                const wspUrl = `https://wa.me/${configTienda.whatsapp}?text=${encodeURIComponent(msg)}`;
-                carrito = [];
-                actualizarBarra();
-                window.location.href = wspUrl;
-                
-                setTimeout(() => {
-                    if (btnConfirmar) {
-                        btnConfirmar.disabled = false;
-                        btnConfirmar.innerText = "CONFIRMAR POR WHATSAPP";
-                        btnConfirmar.style.opacity = "1";
-                    }
-                    mostrarPantalla('inicio');
-                }, 1000);
-            }, 1500);
-        }
+                if (btnConfirmar) {
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.innerText = "CONFIRMAR POR WHATSAPP";
+                    btnConfirmar.style.opacity = "1";
+                    btnConfirmar.style.cursor = "pointer";
+                }
+                mostrarPantalla('inicio');
+            }, 1000);
+        }, 1500);
 
     } catch (err) {
         console.error(err);
-        mostrarMensaje("❌ Error de conexión.", 3000);
+        mostrarMensaje("❌ Error de conexión. Reintenta.", 3000);
         if (btnConfirmar) {
             btnConfirmar.disabled = false;
             btnConfirmar.innerText = "CONFIRMAR POR WHATSAPP";
@@ -565,46 +562,6 @@ function copiarAlias() {
         mostrarMensaje("✅ Alias copiado", 2000);
     });
 }
-
-async function verificarStockCarrito() {
-    // Traemos los estados actuales de la BD
-    const { data, error } = await _supabase.from('hamburguesas').select('nombre, disponible');
-    if (error) return { ok: false, mensaje: "Error al verificar stock" };
-
-    for (let item of carrito) {
-        const prodBD = data.find(p => p.nombre === item.nombre);
-        if (prodBD && prodBD.disponible === false) {
-            return { ok: false, nombre: item.nombre };
-        }
-    }
-    return { ok: true };
-}
-
-async function descontarStockBaseDeDatos() {
-    for (const item of carrito) {
-        // Buscamos el producto para obtener su stock actual
-        const { data: producto } = await _supabase
-            .from('hamburguesas')
-            .select('stock_actual')
-            .eq('nombre', item.nombre)
-            .single();
-
-        if (producto) {
-            const nuevoStock = Math.max(0, producto.stock_actual - item.cantidad);
-            const nuevaDisponibilidad = nuevoStock > 0;
-
-            await _supabase
-                .from('hamburguesas')
-                .update({ 
-                    stock_actual: nuevoStock,
-                    disponible: nuevaDisponibilidad 
-                })
-                .eq('nombre', item.nombre);
-        }
-    }
-}
-
-
 
 document.addEventListener("DOMContentLoaded", async () => {
     await cargarConfiguracion(); 

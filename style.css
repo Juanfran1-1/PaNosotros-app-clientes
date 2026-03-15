@@ -244,39 +244,6 @@ input, select {
     animation: slideUp 0.3s ease-out;
 }
 
-
-/* --- ESTADOS DE STOCK --- */
-.card.sin-stock {
-    opacity: 0.6;
-    filter: grayscale(0.8);
-    cursor: not-allowed !important;
-    pointer-events: none; /* Bloquea el click totalmente */
-    position: relative;
-}
-
-.badge-sin-stock {
-    background: #e74c3c;
-    color: white;
-    padding: 4px 10px;
-    font-weight: bold;
-    border-radius: 5px;
-    font-size: 0.7rem;
-    margin-top: 5px;
-    display: inline-block;
-    filter: none; /* Para que el rojo resalte sobre el gris de la card */
-}
-
-#status-local {
-    text-align: center;
-    background: #e74c3c;
-    color: white;
-    padding: 10px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    font-weight: bold;
-}
-
-
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
