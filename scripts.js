@@ -235,16 +235,29 @@ function cargarMenu() {
     const contenedor = document.getElementById('contenedor-menu');
     if (!contenedor) return;
     contenedor.innerHTML = "";
+
     productos.forEach(p => {
+        // Determinamos si está agotado
+        const estaAgotado = (p.disponible === false);
+
         contenedor.innerHTML += `
-            <div class="card" onclick="abrirDetalle(${p.id})">
-                <img src="${p.foto}" class="img-producto" onerror="this.src='Logo.jpg'">
+            <div class="card ${estaAgotado ? 'agotado' : ''}" 
+                onclick="${estaAgotado ? "mostrarMensaje('¡Sin stock por hoy! 🍔')" : `abrirDetalle(${p.id})`}">
+                
+                <img src="${p.foto}" class="img-producto" onerror="this.src='Logo.jpg'" 
+                    style="${estaAgotado ? 'filter: grayscale(1); opacity: 0.5;' : ''}">
+                
                 <div class="info">
-                    <h3>${p.nombre}</h3>
+                    <h3 style="${estaAgotado ? 'color: #888;' : ''}">
+                        ${p.nombre} ${estaAgotado ? '<span class="tag-agotado">(AGOTADO)</span>' : ''}
+                    </h3>
                     <span class="desc-texto">${p.desc}</span>
-                    <p>$${p.precio}</p>
+                    <p>${estaAgotado ? '---' : '$' + p.precio}</p>
                 </div>
-                <button class="btn-op">+</button>
+                
+                <button class="btn-op" style="${estaAgotado ? 'background: #ccc; cursor: not-allowed;' : ''}">
+                    ${estaAgotado ? '✕' : '+'}
+                </button>
             </div>`;
     });
     actualizarBarra();
@@ -314,7 +327,7 @@ function agregarAlCarritoDesdeDetalle() {
         });
     }
 
-    mostrarMensaje("¡Agregado!", 2000);
+    mostrarMensaje("¡Agregado!", 500);
     mostrarPantalla('menu');
 }
 
@@ -403,11 +416,15 @@ async function enviarWhatsApp() {
             entrega: entrega,
             direccion: entrega === 'Delivery' ? dir : 'Retira en local'
         });
-
-        mostrarMensaje("✅ ¡Pedido confirmado!", 4000);
+        let msgconfir = "✅ ¡Pedido confirmado!";
+        if (pago === 'Transferencia') {
+            // Usamos saltos de línea para que no quede todo junto
+            msgconfir = "✅ ¡Pedido registrado!\n\n⚠️ RECUERDA:\nConsultá disponibilidad de stock\nantes de transferir.";
+        }
+        mostrarMensaje(msgconfir, 5000);
 
         let msg = `🍔 *PEDIDO #${idGenerado || 'N/A'}* 🍔\n\n`;
-        msg += `*Cliente:* ${nombre}\n*Entrega:* ${entrega}\n`;
+        msg += `*Tu nombre:* ${nombre}\n*Entrega:* ${entrega}\n`;
         if (entrega === 'Delivery') msg += `*Dirección:* ${dir}\n`;
         msg += `*Pago:* ${pago}\n\n*PRODUCTOS:*\n`;
 
@@ -417,6 +434,7 @@ async function enviarWhatsApp() {
             msg += `\n`;
         });
         msg += `\n*TOTAL: $${total}*\n\n`;
+        if (pago === 'Transferencia') msg += `Recorda preguntar por la disponibilidad del stock antes de enviar el comprobante \n`;
         msg += `Podes consultar el estado de tu pedido con el número *#${idGenerado}* en nuestra web.`;
 
         setTimeout(() => {

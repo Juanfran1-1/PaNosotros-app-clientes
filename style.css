@@ -218,21 +218,34 @@ input, select {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
-
-/* --- TOAST (Mensajes flotantes) --- */
 #toast {
     position: fixed;
-    top: 20px;
+    /* Centrado absoluto */
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
-    background: var(--oscuro);
+    transform: translate(-50%, -50%);
+    
+    /* Estética de "Cartel" */
+    background: rgba(51, 45, 43, 0.95); /* Usando tu variable --oscuro con opacidad */
     color: white;
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    z-index: 10000; /* Aumentado para estar sobre todo */
+    padding: 20px 40px;
+    border-radius: 15px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-align: center;
+    border: 2px solid var(--naranja); /* Añade un borde para que resalte */
+    
+    z-index: 10000;
     display: none;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    
+    /* Animación opcional para que no aparezca tan brusco */
+    animation: aparecerCartel 0.3s ease-out;
+}
+
+@keyframes aparecerCartel {
+    from { opacity: 0; transform: translate(-50%, -40%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
 }
 
 /* --- ESTILOS ADICIONALES PARA EL MODAL DE CONFIRMACIÓN --- */
@@ -242,6 +255,28 @@ input, select {
 
 #modal-confirmacion > div {
     animation: slideUp 0.3s ease-out;
+}
+
+/* Estilo para la tarjeta agotada */
+.card.agotado {
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    cursor: not-allowed; /* Cambia el puntero del mouse */
+}
+
+/* Etiqueta de texto (AGOTADO) */
+.tag-agotado {
+    color: #e74c3c; /* Rojo para advertir */
+    font-size: 0.7rem;
+    font-weight: bold;
+    margin-left: 5px;
+    text-transform: uppercase;
+}
+
+/* Efecto visual en la imagen */
+.card.agotado .img-producto {
+    filter: grayscale(1);
+    opacity: 0.6;
 }
 
 @keyframes fadeIn {
