@@ -12,8 +12,8 @@ let pantallaDestinoTemporal = null;
 let productos = []; 
 
 let configTienda = {
-    whatsapp: "5492215383928",
-    alias_mp: "juanfran11mp",
+    whatsapp: "",
+    alias_mp: "",
     abierto: true
 };
 
@@ -130,8 +130,8 @@ async function consultarEstado() {
             if (data.metodo_pago === "Transferencia") {
                 // Flujo para Transferencia
                 const estadosTransf = {
-                    "Pendiente de Pago": { txt: "⏳ Esperando comprobante", color: "#e67e22" },
-                    "Cocinando": { txt: "👨‍🍳 EN COCINA", color: "#3498db" },
+                    "Pendiente de Pago": { txt: "⏳ Esperando comprobante", color: "#e4e73b" },
+                    "Cocinando": { txt: "👨‍🍳 EN COCINA", color: "#df8723" },
                     "Terminado": { txt: "✅ ¡LISTO!", color: "#2ecc71" },
                     "Rechazado": { txt: "❌ CANCELADO", color: "#e74c3c" }
                 };
@@ -140,8 +140,8 @@ async function consultarEstado() {
                 // Flujo para Efectivo (u otros)
                 const estadosEfectivo = {
                     // Si en la base dice 'Pendiente de Pago' pero es Efectivo, el cliente ve 'En Cocina'
-                    "Pendiente de Pago": { txt: "✅ ¡LISTO!", color: "#2ecc71" }, 
-                    "Cocinando": { txt: "👨‍🍳 EN COCINA", color: "#3498db" },
+                    "Esperando Confirmacion": { txt: "⏳ Pedido recibido", color: "#e4e73b" }, 
+                    "Cocinando": { txt: "👨‍🍳 EN COCINA", color: "#df8723" },
                     "Terminado": { txt: "✅ ¡LISTO!", color: "#2ecc71" },
                     "Rechazado": { txt: "❌ CANCELADO", color: "#e74c3c" }
                 };
@@ -311,8 +311,9 @@ function actualizarFooterDetalle() {
 function agregarAlCarritoDesdeDetalle() {
     const quitados = Array.from(document.querySelectorAll('.check-quitar:checked')).map(el => el.value);
     
+    // Agregamos el ID a la búsqueda para no duplicar items iguales
     const itemExistente = carrito.find(item => 
-        item.nombre === productoSeleccionado.nombre && 
+        item.id === productoSeleccionado.id && // <--- CAMBIO AQUÍ
         JSON.stringify(item.quitados.sort()) === JSON.stringify(quitados.sort())
     );
 
@@ -320,6 +321,7 @@ function agregarAlCarritoDesdeDetalle() {
         itemExistente.cantidad += cantidadEnDetalle;
     } else {
         carrito.push({
+            id: productoSeleccionado.id, // <--- ¡IMPORTANTE! Guardar el ID
             nombre: productoSeleccionado.nombre,
             precio: productoSeleccionado.precio,
             cantidad: cantidadEnDetalle,
@@ -327,7 +329,7 @@ function agregarAlCarritoDesdeDetalle() {
         });
     }
 
-    mostrarMensaje("¡Agregado!", 500);
+    mostrarMensaje("¡Agregado!", 1000);
     mostrarPantalla('menu');
 }
 
@@ -369,13 +371,39 @@ function eliminarDelCarrito(index) {
     if (carrito.length === 0) mostrarPantalla('menu');
 }
 
-// 8. ENVÍO A WHATSAPP Y GUARDADO EN BD
+// 8. ENVÍO A WHATSAPP Y GUARDADO EN BD (CON VALIDACIÓN DE STOCK DINÁMICA)
 async function enviarWhatsApp() {
-    // 1. Validar si el local está abierto (Dato de la nueva tabla)
+    // 1. Validar si el local está abierto
     if (!configTienda.abierto) {
         mostrarMensaje("El local está cerrado en este momento 😴", 4000);
         return;
     }
+
+    // --- NUEVA VALIDACIÓN DE STOCK PRODUCTO POR PRODUCTO ---
+    try {
+        // Obtenemos los datos frescos de la tabla hamburguesas
+        const { data: productosFresh, error: errorStock } = await _supabase
+            .from('hamburguesas')
+            .select('id, nombre, disponible');
+
+        if (errorStock) throw errorStock;
+
+        // Verificamos cada item del carrito
+        for (let item of carrito) {
+            const prodBD = productosFresh.find(p => p.id === item.id);
+            
+            // Si el producto no existe o disponible es false
+            if (!prodBD || prodBD.disponible === false) {
+                mostrarMensaje(`⚠️ Lo sentimos \n\n El producto "${item.nombre}" se acaba de agotar. \n\n Por favor, eliminalo para continuar.`, 5000);
+                return; // Cortamos la ejecución aquí
+            }
+        }
+    } catch (e) {
+        console.error("Error validando stock:", e);
+        mostrarMensaje("❌ Error al verificar stock. Reintenta.", 3000);
+        return;
+    }
+    // --- FIN VALIDACIÓN DE STOCK ---
 
     const nombre = document.getElementById('nombre-cliente').value.trim();
     const telefono = document.getElementById('telefono-cliente').value.trim(); 
@@ -406,19 +434,18 @@ async function enviarWhatsApp() {
     }).join(' | ');
 
     try {
-        // Guardamos y obtenemos el ID
         const idGenerado = await guardarPedidoEnSupabase({
             cliente: nombre,
-            telefono: telefono, // <-- NUEVO
+            telefono: telefono,
             detalle: detalleBD,
             monto: total,
             metodo_pago: pago,
             entrega: entrega,
             direccion: entrega === 'Delivery' ? dir : 'Retira en local'
         });
+
         let msgconfir = "✅ ¡Pedido confirmado!";
         if (pago === 'Transferencia') {
-            // Usamos saltos de línea para que no quede todo junto
             msgconfir = "✅ ¡Pedido registrado!\n\n⚠️ RECUERDA:\nConsultá disponibilidad de stock\nantes de transferir.";
         }
         mostrarMensaje(msgconfir, 5000);
@@ -430,7 +457,7 @@ async function enviarWhatsApp() {
 
         carrito.forEach(item => {
             msg += `- ${item.cantidad}x ${item.nombre}`;
-            if (item.quitados.length > 0) msg += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
+            if (item.quitados && item.quitados.length > 0) msg += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
             msg += `\n`;
         });
         msg += `\n*TOTAL: $${total}*\n\n`;
@@ -438,11 +465,10 @@ async function enviarWhatsApp() {
         msg += `Podes consultar el estado de tu pedido con el número *#${idGenerado}* en nuestra web.`;
 
         setTimeout(() => {
-            // 2. Usar el número de WhatsApp dinámico de la tabla configuracion
             const wspUrl = `https://wa.me/${configTienda.whatsapp}?text=${encodeURIComponent(msg)}`;
             
             carrito = [];
-            actualizarBarra();
+            if (typeof actualizarBarra === 'function') actualizarBarra();
             window.location.href = wspUrl;
             
             setTimeout(() => {

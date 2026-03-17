@@ -279,6 +279,26 @@ input, select {
     opacity: 0.6;
 }
 
+/* ESTILOS PARA EL VIDEO DE FONDO */
+.video-fondo {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 500px; /* Mismo ancho que tu section */
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    opacity: 0.35; /* Ajustá este valor para que el video se vea más o menos */
+    pointer-events: none;
+}
+
+/* Hacemos que el fondo del menú sea traslúcido para ver el video */
+#menu , #tracking {
+    background-color: rgba(253, 250, 245, 0.8) !important;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }

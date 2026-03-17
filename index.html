@@ -43,40 +43,54 @@
     </section>
 
     <section id="tracking" style="display:none;">
-        <div onclick="mostrarPantalla('inicio')" style="position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 1.2rem; background: #332d2b; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;">←</div>
-        
-        <h2 style="margin-top: 40px;">Seguí tu Pedido</h2>
-        <div style="padding: 20px; background: white; border-radius: 20px; margin-top: 20px; border: 1px solid #eee; text-align: center;">
-            <p style="color: #666; margin-bottom: 15px; font-size: 0.9rem;">Ingresá el número de pedido para ver el estado en tiempo real.</p>
-            
-            <input type="number" id="input-tracking" placeholder="Ej: 58" style="width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #ff9f43; font-size: 1.2rem; text-align: center; margin-bottom: 15px; display: block;">
-            
-            <button onclick="consultarEstado()" class="btn-principal">CONSULTAR ESTADO</button>
+        <video autoplay muted loop playsinline class="video-fondo">
+            <source src="src/video-menu.mp4" type="video/mp4">
+        </video>
 
-            <div id="resultado-tracking" style="display: none; margin-top: 30px; padding: 20px; border-radius: 15px; background: #fdfaf5; border: 1px dashed #ccc;">
-                <p style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">ORDEN #<span id="res-id"></span></p>
-                <div id="res-badge" style="display: inline-block; padding: 10px 25px; border-radius: 50px; color: white; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
-                <p style="margin-top: 15px; font-size: 0.75rem; color: #aaa; font-style: italic;">La información se actualiza al volver a consultar.</p>
+        <div style="position: relative; z-index: 1;">
+            <div onclick="mostrarPantalla('inicio')" style="position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 1.2rem; background: #332d2b; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;">←</div>
+            
+            <h2 style="margin-top: 40px;">Seguí tu Pedido</h2>
+            
+            <div class="cuadro-tracking" style="padding: 20px; background: white; border-radius: 20px; margin-top: 20px; border: 1px solid #eee; text-align: center;">
+                <p style="color: #000; margin-bottom: 15px; font-size: 0.9rem; font-weight: bold;">Ingresá el número de pedido para ver el estado actual.</p>
+                
+                <input type="number" id="input-tracking" placeholder="Ej: 58" style="width: 100%; padding: 15px; border-radius: 12px; font-size: 1.2rem; text-align: center; margin-bottom: 15px; display: block;">
+                
+                <button onclick="consultarEstado()" class="btn-principal">CONSULTAR ESTADO</button>
+
+                <div id="resultado-tracking" style="display: none; margin-top: 30px; padding: 20px; border-radius: 15px; background: #fdfaf5; border: 1px dashed #ccc;">
+                    <p style="font-size: 0.8rem; color: #444; margin-bottom: 5px;">ORDEN #<span id="res-id"></span></p>
+                    <div id="res-badge" style="display: inline-block; padding: 10px 25px; border-radius: 50px; color: white; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
+                    <p style="margin-top: 15px; font-size: 0.75rem; color: #000; font-style: italic;">La información se actualiza al volver a consultar.</p>
+                </div>
             </div>
-        </div>
 
-        <br>
-        <div style="margin: 20px 0 100px 0; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 15px; border: 1px dashed #d35400;">
-            <p style="margin: 0; font-size: 0.9rem; color: #332d2b;">Si tenes alguna duda podes consultar por wsp</p>
+            <br>
+            <div style="margin: 20px 0 100px 0; background: rgba(255,255,255,0.4); padding: 15px; border-radius: 15px; border: 1px dashed #d35400;">
+                <p style="margin: 0; font-size: 1rem; color: #2e2e2e; font-weight: bold;">Si tenés alguna duda podés consultar por WhatsApp</p>
+            </div>
         </div>
     </section>
 
     <section id="menu" style="display:none;">
-        <div onclick="mostrarPantalla('inicio')" style="position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 1.2rem; background: #332d2b; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;">←</div>
-        <h2 style="margin-top: 40px;">Nuestro Menú</h2>
-        <div class="lista-productos" id="contenedor-menu"></div>
-        <div style="margin: 20px 0 100px 0; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 15px; border: 1px dashed #d35400;">
-            <p style="margin: 0; font-size: 0.9rem; color: #332d2b;">Cada combo contiene 5 miniburguers con papas noisette</p>
-        </div>
-        <button class="btn-carrito" id="btn-flotante-carrito" onclick="irAlCheckout()" style="display:none;">
-            <span>Ver pedido (<span id="cart-count">0</span>)</span>
-            <span>$<span id="cart-total">0</span></span>
-        </button>
+            <video autoplay muted loop playsinline class="video-fondo">
+                <source src="src/video-menu.mp4" type="video/mp4">
+            </video>
+
+            <div onclick="mostrarPantalla('inicio')" style="position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 1.2rem; background: #332d2b; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;">←</div>
+            <h2 style="margin-top: 40px; position: relative; z-index: 1;">Nuestro Menú</h2>
+            
+            <div class="lista-productos" id="contenedor-menu" style="position: relative; z-index: 1;"></div>
+            
+            <div style="margin: 20px 0 100px 0; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 15px; border: 1px dashed #d35400; position: relative; z-index: 1;">
+                <p style="margin: 0; font-size: 1 rem; color: #000000;">Cada combo contiene 5 miniburguers con papas noisette</p>
+            </div>
+            
+            <button class="btn-carrito" id="btn-flotante-carrito" onclick="irAlCheckout()" style="display:none;">
+                <span>Ver pedido (<span id="cart-count">0</span>)</span>
+                <span>$<span id="cart-total">0</span></span>
+            </button>
     </section>
 
     <section id="detalle-producto" style="display:none;">
