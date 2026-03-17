@@ -133,7 +133,7 @@ async function consultarEstado() {
                     "Pendiente de Pago": { txt: "⏳ Esperando comprobante", color: "#e4e73b" },
                     "Cocinando": { txt: "👨‍🍳 EN COCINA", color: "#df8723" },
                     "Terminado": { txt: "✅ ¡LISTO!", color: "#2ecc71" },
-                    "Rechazado": { txt: "❌ CANCELADO", color: "#e74c3c" }
+                    "Rechazado": { txt: "❌ CANCELADO", color: "#e74c3c" }  
                 };
                 estadoVisual = estadosTransf[data.estado] || estadoVisual;
             } else {
