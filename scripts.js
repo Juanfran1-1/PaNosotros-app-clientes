@@ -66,7 +66,7 @@ async function guardarPedidoEnSupabase(datos) {
             String(ahora.getMinutes()).padStart(2, '0') + ":" + 
             String(ahora.getSeconds()).padStart(2, '0');
 
-        const estadoInicial = (datos.metodo_pago === 'Transferencia') ? "Pendiente de Pago" : "Cocinando";
+        const estadoInicial = (datos.metodo_pago === 'Transferencia') ? "Pendiente de Pago" : "Esperando Confirmacion";
 
         const { data, error } = await _supabase
             .from('pedidos')
