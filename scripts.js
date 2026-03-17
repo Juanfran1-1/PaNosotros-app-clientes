@@ -143,6 +143,7 @@ async function consultarEstado() {
                     "Esperando Confirmacion": { txt: "⏳ Pedido recibido", color: "#e4e73b" }, 
                     "Cocinando": { txt: "👨‍🍳 EN COCINA", color: "#df8723" },
                     "Terminado": { txt: "✅ ¡LISTO!", color: "#2ecc71" },
+                    "Pendiente de Pago": { txt: "✅ ¡LISTO!", color: "#2ecc71" },
                     "Rechazado": { txt: "❌ CANCELADO", color: "#e74c3c" }
                 };
                 estadoVisual = estadosEfectivo[data.estado] || estadoVisual;
