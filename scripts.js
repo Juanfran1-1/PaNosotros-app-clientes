@@ -40,8 +40,7 @@ async function cargarConfiguracion() {
             const btnPedido = document.getElementById('btn-comenzar');
             const statusLocal = document.getElementById('status-local');
             
-            const horarioValido = verificarHorarioApertura();
-            const estaRealmenteAbierto = configTienda.abierto && horarioValido;
+            const estaRealmenteAbierto = configTienda.abierto ;
 
             if (!estaRealmenteAbierto) {
                 // CAMBIO: En lugar de deshabilitar, permitimos entrar pero cambiamos el texto
@@ -259,7 +258,7 @@ function cargarMenu() {
     contenedor.innerHTML = "";
 
     // Verificar si el local está cerrado para el modo "solo lectura"
-    const localCerrado = !configTienda.abierto || !verificarHorarioApertura();
+    const localCerrado = !configTienda.abierto ;
 
     productos.forEach(p => {
         const estaAgotado = (p.disponible === false);
@@ -470,7 +469,7 @@ async function enviarWhatsApp() {
         if (nuevaConfig) configTienda.abierto = nuevaConfig.abierto;
     } catch (e) { console.log("Error al re-verificar cierre"); }
 
-    if (!configTienda.abierto || !verificarHorarioApertura()) {
+    if (!configTienda.abierto) {
         mostrarMensaje("Lo sentimos, el local ya se encuentra cerrado 😴", 4000);
         return;
     }
@@ -647,21 +646,6 @@ function guardarCarritoEnLocalStorage() {
 }
 
 
-function verificarHorarioApertura() {
-    const ahora = new Date();
-    const dia = ahora.getDay(); // 0 = Domingo, 6 = Sábado
-    const hora = ahora.getHours();
-    const minutos = ahora.getMinutes();
-    const tiempoActual = hora * 100 + minutos; // Ejemplo: 19:30 -> 1930
-
-    // Días permitidos: Sábado (6) y Domingo (0)
-    const esFinDeSemana = (dia === 6 || dia === 0);
-    
-    // Rango: 19:30 (1930) a 22:45 (2245)
-    const estaEnRangoHora = (tiempoActual >= 1930 && tiempoActual <= 2245);
-
-    return esFinDeSemana && estaEnRangoHora;
-}
 
 // Modificá tu bloque final así:
 document.addEventListener("DOMContentLoaded", async () => {
