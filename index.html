@@ -28,14 +28,17 @@
     <section id="inicio">
         <img src="src/Logo.jpg" alt="Logo Pa Nosotros" style="width: 150px; height: 150px; border-radius: 50%; margin: 0 auto 20px auto; display: block; border: 3px solid #d35400; object-fit: cover;">
         <p style="font-weight: bold; font-size: 1.1rem;">Tu próxima obsesión a un solo click.</p>
-        
-        <button class="btn-principal" onclick="mostrarPantalla('menu')">COMENZAR PEDIDO</button>
+        <div id="status-local" style="display: none; margin: 15px 0; background: rgba(211, 84, 0, 0.15); padding: 12px; border-radius: 12px; border: 1px dashed var(--naranja); color: #000; font-size: 0.9rem; font-weight: bold;">
+            El local se encuentra cerrado actualmente
+        </div>
+
+        <button id="btn-comenzar" class="btn-principal" onclick="mostrarPantalla('menu')">COMENZAR PEDIDO</button>
         
         <button onclick="mostrarPantalla('tracking')" style="background:rgba(255,255,255,0.1); border: 1px solid white; color: white; margin-top: 15px; padding: 12px; border-radius: 50px; width: 100%; font-weight: bold; cursor: pointer; font-size: 0.9rem; backdrop-filter: blur(5px);">🔍 VER MI PEDIDO</button>
         
         <div style="margin-top: 25px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);">
             <h3 style="margin: 0 0 5px 0; font-size: 1.1rem; color: #ff9f43;">Días y Horarios</h3>
-            <p style="margin: 0; font-size: 0.9rem; line-height: 1.6;">Sábado de 18:00 a 23:30<br>Domingo de 19:00 a 23:00</p>
+            <p style="margin: 0; font-size: 0.9rem; line-height: 1.6;">Sábados y Domingos <br> 19:30 a 22:45</p>
         </div>
 
         <br>
@@ -120,7 +123,7 @@
         </div>
         <div class="form-group">
             <label>¿Cómo recibís?</label>
-            <select id="metodo-entrega" onchange="toggleDir()">
+            <select id="metodo-entrega" onchange="toggleDir(); actualizarResumenCheckout()">
                 <option value="Delivery">Delivery</option>
                 <option value="Retiro">Retiro en local</option>
             </select>

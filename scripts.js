@@ -10,47 +10,60 @@ let productoSeleccionado = null;
 let cantidadEnDetalle = 1;
 let pantallaDestinoTemporal = null;
 let productos = []; 
+let COSTO_ENVIO = 0;
 
 let configTienda = {
     whatsapp: "",
     alias_mp: "",
-    abierto: true
+    abierto: true,
 };
 
+// scripts.js
 async function cargarConfiguracion() {
     try {
-        const { data, error } = await _supabase
-            .from('configuracion')
-            .select('*')
-            .single();
-
+        const { data, error } = await _supabase.from('configuracion').select('*').single();
         if (error) throw error;
         if (data) {
             configTienda = data;
-
-            // --- ACTUALIZAR EL HTML DINÁMICAMENTE ---
-            
-            // 1. Actualizar Alias en el Checkout
-            const aliasSpan = document.getElementById('alias-texto');
-            if (aliasSpan) aliasSpan.innerText = configTienda.alias_mp;
-
-            // 2. Controlar estado del local
-            if (!configTienda.abierto) {
-                const btnPedido = document.getElementById('btn-comenzar');
-                const statusLocal = document.getElementById('status-local');
-                
-                if (btnPedido) {
-                    btnPedido.innerText = "LOCAL CERRADO";
-                    btnPedido.style.background = "#7f8c8d";
-                    btnPedido.disabled = true; // Opcional: deshabilitar el botón
-                }
-                if (statusLocal) statusLocal.style.display = 'block';
+            COSTO_ENVIO = data.COSTO_ENVIO || 0;
+            if (document.getElementById('checkout').style.display === 'flex') {
+                actualizarResumenCheckout();
             }
+            console.log("Configuración cargada:", configTienda);
+            
+            // AGREGAR ESTO: Actualiza el alias en el HTML si ya existe el elemento
+            const spanAlias = document.getElementById('alias-texto');
+            if (spanAlias && configTienda.alias_mp) {
+                spanAlias.innerText = configTienda.alias_mp;
+            }
+            
+            const btnPedido = document.getElementById('btn-comenzar');
+            const statusLocal = document.getElementById('status-local');
+            
+            const horarioValido = verificarHorarioApertura();
+            const estaRealmenteAbierto = configTienda.abierto && horarioValido;
 
-            console.log("Configuración cargada ✅");
+            if (!estaRealmenteAbierto) {
+                // CAMBIO: En lugar de deshabilitar, permitimos entrar pero cambiamos el texto
+                if (btnPedido) {
+                    btnPedido.innerText = "VER MENÚ";
+                    btnPedido.style.background = "#7f8c8d"; // Un gris elegante
+                    btnPedido.disabled = false; 
+                }
+                if (statusLocal) {
+                    statusLocal.style.display = 'block';
+                    statusLocal.innerText = "El local se encuentra cerrado actualmente";
+                }
+            } else {
+                if (btnPedido) {
+                    btnPedido.innerText = "COMENZAR PEDIDO";
+                    btnPedido.style.background = "var(--naranja)";
+                }
+                if (statusLocal) statusLocal.style.display = 'none';
+            }
         }
     } catch (err) {
-        console.error("Error cargando configuración:", err);
+        console.error("Error:", err);
     }
 }
 
@@ -163,25 +176,22 @@ async function consultarEstado() {
     }
 }
 
-// 3. CARGA DE DATOS DESDE SUPABASE
 async function cargarProductosDesdeBD() {
     try {
         const { data, error } = await _supabase.from('hamburguesas').select('*');
         if (error) throw error;
         
+        // Actualizamos la variable global 'productos' con los datos más recientes
         productos = data.map(p => ({
             ...p,
             foto: p.foto ? `src/${p.foto}` : 'src/Logo.jpg', 
-            desc: p.desc || 'Combo de 5 mini burgers + papas noisette.',
-            ingredientes: p.ingredientes ? p.ingredientes.split(',').map(i => i.trim()) : ['Cheddar', 'Panceta', 'Pepinillos']
+            desc: p.desc || 'Combo de mini burgers.',
+            ingredientes: p.ingredientes ? p.ingredientes.split(',').map(i => i.trim()) : []
         }));
-
-        const loader = document.getElementById('loader');
-        if (loader) loader.style.display = 'none';
         
     } catch (err) {
         console.error("Error cargando base de datos:", err);
-        mostrarMensaje("Error al cargar el menú ❌", 5000);
+        mostrarMensaje("Error al actualizar el menú ❌", 3000);
     }
 }
 
@@ -198,17 +208,26 @@ function mostrarPantalla(idPantalla) {
     ejecutarCambioPantalla(idPantalla);
 }
 
-function ejecutarCambioPantalla(idPantalla) {
+async function ejecutarCambioPantalla(idPantalla) { // Agregamos async aquí
+
+
     const loader = document.getElementById('loader');
     if (loader) loader.style.display = 'flex';
 
-    setTimeout(() => {
+    setTimeout(async () => { // Agregamos async aquí también
         document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+        
         const target = document.getElementById(idPantalla);
         if (target) {
             target.style.display = (idPantalla === 'inicio') ? 'flex' : 'block';
         }
-        if (idPantalla === 'menu') cargarMenu();
+
+        // --- CAMBIO CLAVE AQUÍ ---
+        if (idPantalla === 'menu') {
+            await cargarProductosDesdeBD(); // Trae los productos frescos de la base de datos
+            cargarMenu(); // Dibuja el menú con esos productos nuevos
+        }
+        // -------------------------
         
         if (idPantalla === 'checkout') {
             actualizarResumenCheckout();
@@ -225,6 +244,7 @@ function cerrarConfirmacion(acepta) {
     document.getElementById('modal-confirmacion').style.display = 'none';
     if (acepta) {
         carrito = [];
+        localStorage.removeItem('carrito_panosotros')
         actualizarBarra();
         ejecutarCambioPantalla(pantallaDestinoTemporal);
     }
@@ -232,24 +252,35 @@ function cerrarConfirmacion(acepta) {
 }
 
 // 5. CARGAR MENÚ
+// En cargarMenu, hacemos que las tarjetas no abran el detalle si está cerrado
 function cargarMenu() {
     const contenedor = document.getElementById('contenedor-menu');
     if (!contenedor) return;
     contenedor.innerHTML = "";
 
+    // Verificar si el local está cerrado para el modo "solo lectura"
+    const localCerrado = !configTienda.abierto || !verificarHorarioApertura();
+
     productos.forEach(p => {
-        // Determinamos si está agotado
         const estaAgotado = (p.disponible === false);
+        
+        // Lógica de click
+        let accionClick = `abrirDetalle(${p.id})`;
+        if (localCerrado) {
+            // Si está cerrado, solo mostramos el mensaje pero no abrimos el detalle
+            accionClick = "mostrarMensaje('El local está cerrado.', 3000)";
+        } else if (estaAgotado) {
+            accionClick = "mostrarMensaje('¡Sin stock por hoy! 🍔')";
+        }
 
         contenedor.innerHTML += `
-            <div class="card ${estaAgotado ? 'agotado' : ''}" 
-                onclick="${estaAgotado ? "mostrarMensaje('¡Sin stock por hoy! 🍔')" : `abrirDetalle(${p.id})`}">
+            <div class="card ${estaAgotado ? 'agotado' : ''}" onclick="${accionClick}">
                 
                 <img src="${p.foto}" class="img-producto" onerror="this.src='Logo.jpg'" 
                     style="${estaAgotado ? 'filter: grayscale(1); opacity: 0.5;' : ''}">
                 
                 <div class="info">
-                    <h3 style="${estaAgotado ? 'color: #888;' : ''}">
+                    <h3>
                         ${p.nombre} ${estaAgotado ? '<span class="tag-agotado">(AGOTADO)</span>' : ''}
                     </h3>
                     <span class="desc-texto">${p.desc}</span>
@@ -257,11 +288,18 @@ function cargarMenu() {
                 </div>
                 
                 <button class="btn-op" style="${estaAgotado ? 'background: #ccc; cursor: not-allowed;' : ''}">
-                    ${estaAgotado ? '✕' : '+'}
+                    ${localCerrado ? '-' : (estaAgotado ? '✕' : '+')}
                 </button>
             </div>`;
     });
-    actualizarBarra();
+
+    // Ocultar el botón flotante del carrito si el local está cerrado
+    const btnCarrito = document.getElementById('btn-flotante-carrito');
+    if (localCerrado) {
+        if (btnCarrito) btnCarrito.style.display = 'none';
+    } else {
+        actualizarBarra();
+    }
 }
 
 // 6. DETALLE DE PRODUCTO
@@ -322,7 +360,7 @@ function agregarAlCarritoDesdeDetalle() {
         itemExistente.cantidad += cantidadEnDetalle;
     } else {
         carrito.push({
-            id: productoSeleccionado.id, // <--- ¡IMPORTANTE! Guardar el ID
+            id: productoSeleccionado.id, 
             nombre: productoSeleccionado.nombre,
             precio: productoSeleccionado.precio,
             cantidad: cantidadEnDetalle,
@@ -331,6 +369,7 @@ function agregarAlCarritoDesdeDetalle() {
     }
 
     mostrarMensaje("¡Agregado!", 1000);
+    guardarCarritoEnLocalStorage()
     mostrarPantalla('menu');
 }
 
@@ -349,24 +388,75 @@ function actualizarBarra() {
     }
 }
 
+
 function actualizarResumenCheckout() {
     const contenedor = document.getElementById('resumen-pedido');
     if (!contenedor) return;
-    contenedor.innerHTML = "<strong>Resumen:</strong><br><br>";
+
+    // Obtenemos el método de entrega (por defecto Delivery si no hay nada)
+    const selectorEntrega = document.getElementById('metodo-entrega');
+    const metodoEntrega = selectorEntrega ? selectorEntrega.value : "Delivery";
+    
+    contenedor.innerHTML = "<strong style='color:#333;'>Tu Pedido:</strong><br><br>";
+    
+    // Calculamos subtotal base
+    let subtotalProductos = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+    
     carrito.forEach((item, index) => {
-        let detalleQuitados = item.quitados.length > 0 ? `<br><small style="color: #d35400;">SIN: ${item.quitados.join(', ')}</small>` : "";
+        let detalleQuitados = item.quitados && item.quitados.length > 0 
+            ? `<br><small style="color: #d35400;">SIN: ${item.quitados.join(', ')}</small>` 
+            : "";
+
         contenedor.innerHTML += `
             <div style="background: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #eee; text-align: left; position: relative; color: #333;">
                 <button onclick="eliminarDelCarrito(${index})" style="position:absolute; right:10px; top:10px; border:none; background:none; color:gray; font-size:1.2rem;">✕</button>
                 <strong>${item.cantidad}x ${item.nombre}</strong> - $${item.precio * item.cantidad}
                 ${detalleQuitados}
+                <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+                    <button onclick="cambiarCantidadCarrito(${index}, -1)" style="width:25px; height:25px; border-radius:50%; border:none; background:#eee;">-</button>
+                    <span>${item.cantidad}</span>
+                    <button onclick="cambiarCantidadCarrito(${index}, 1)" style="width:25px; height:25px; border-radius:50%; border:none; background:#eee;">+</button>
+                </div>
             </div>`;
     });
-    contenedor.innerHTML += `<h3 style="color:#333">TOTAL: $${total}</h3>`;
+
+    let totalCalculado = subtotalProductos;
+    if (metodoEntrega === "Delivery") {
+        totalCalculado += COSTO_ENVIO;
+        contenedor.innerHTML += `<p style="text-align:right; color:#666;">Envío: $${COSTO_ENVIO}</p>`;
+    }
+
+    total = totalCalculado; // Actualizamos la variable global
+    contenedor.innerHTML += `<h3 style="color:#333; text-align:right; margin-top:10px;">TOTAL: $${total}</h3>`;
+}
+
+// ESTA FUNCIÓN ES LA QUE HACE QUE LOS BOTONES FUNCIONEN
+function cambiarCantidadCarrito(index, delta) {
+    if (carrito[index].cantidad + delta > 0) {
+        // Sumamos o restamos
+        carrito[index].cantidad += delta;
+    } else {
+        // Si llega a cero, borramos el producto
+        carrito.splice(index, 1);
+    }
+    
+    // Recalcular el total global
+    total = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+    
+    // Actualizar visualmente y guardar
+    actualizarResumenCheckout();
+    guardarCarritoEnLocalStorage();
+    actualizarBarra(); // Actualiza el circulito del carrito si existe
+
+    // Si borró todo, lo mandamos al menú
+    if (carrito.length === 0) {
+        mostrarPantalla('menu');
+    }
 }
 
 function eliminarDelCarrito(index) {
     carrito.splice(index, 1);
+    guardarCarritoEnLocalStorage()
     actualizarResumenCheckout();
     actualizarBarra();
     if (carrito.length === 0) mostrarPantalla('menu');
@@ -375,8 +465,13 @@ function eliminarDelCarrito(index) {
 // 8. ENVÍO A WHATSAPP Y GUARDADO EN BD (CON VALIDACIÓN DE STOCK DINÁMICA)
 async function enviarWhatsApp() {
     // 1. Validar si el local está abierto
-    if (!configTienda.abierto) {
-        mostrarMensaje("El local está cerrado en este momento 😴", 4000);
+    try {
+        const { data: nuevaConfig } = await _supabase.from('configuracion').select('abierto').single();
+        if (nuevaConfig) configTienda.abierto = nuevaConfig.abierto;
+    } catch (e) { console.log("Error al re-verificar cierre"); }
+
+    if (!configTienda.abierto || !verificarHorarioApertura()) {
+        mostrarMensaje("Lo sentimos, el local ya se encuentra cerrado 😴", 4000);
         return;
     }
 
@@ -451,24 +546,36 @@ async function enviarWhatsApp() {
         }
         mostrarMensaje(msgconfir, 5000);
 
-        let msg = `🍔 *PEDIDO #${idGenerado || 'N/A'}* 🍔\n\n`;
+        let msg = ` *PEDIDO #${idGenerado || 'N/A'}* \n\n`;
         msg += `*Tu nombre:* ${nombre}\n*Entrega:* ${entrega}\n`;
         if (entrega === 'Delivery') msg += `*Dirección:* ${dir}\n`;
-        msg += `*Pago:* ${pago}\n\n*PRODUCTOS:*\n`;
+        msg += `*Pago:* ${pago}\n\n`;
 
+        msg += `--------------------------\n`;
+        msg += `*PRODUCTOS:*\n`
         carrito.forEach(item => {
             msg += `- ${item.cantidad}x ${item.nombre}`;
             if (item.quitados && item.quitados.length > 0) msg += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
             msg += `\n`;
         });
-        msg += `\n*TOTAL: $${total}*\n\n`;
+        msg += `--------------------------\n`;
+
+        if(entrega === "Delivery") {
+            msg += `Subtotal: $${total - COSTO_ENVIO}\n`;
+            msg += `Envío: $${COSTO_ENVIO}\n`;
+        
+        msg += `\n*TOTAL: $${total}*\n\n`;}
+
+        msg += `--------------------------\n`;
         if (pago === 'Transferencia') msg += `Recorda preguntar por la disponibilidad del stock antes de enviar el comprobante \n`;
+        if (pago === 'Transferencia') msg += `--------------------------\n`;
         msg += `Podes consultar el estado de tu pedido con el número *#${idGenerado}* en nuestra web.`;
 
         setTimeout(() => {
             const wspUrl = `https://wa.me/${configTienda.whatsapp}?text=${encodeURIComponent(msg)}`;
             
             carrito = [];
+            localStorage.removeItem('carrito_panosotros')
             if (typeof actualizarBarra === 'function') actualizarBarra();
             window.location.href = wspUrl;
             
@@ -503,7 +610,19 @@ function mostrarMensaje(texto, duracion = 2000) {
     setTimeout(() => { toast.style.display = 'none'; }, duracion);
 }
 
-function irAlCheckout() { mostrarPantalla('checkout'); }
+function irAlCheckout() {
+    // 1. Mostramos la pantalla
+    mostrarPantalla('checkout');
+    
+    // 2. Ejecutamos la actualización del resumen
+    // Envolvemos en un try/catch para que si falla, al menos sepa qué pasó
+    try {
+        actualizarResumenCheckout();
+    } catch (error) {
+        console.error("Error en el resumen:", error);
+    }
+}
+
 function toggleDir() {
     const m = document.getElementById('metodo-entrega').value;
     const campo = document.getElementById('campo-dir');
@@ -522,9 +641,40 @@ function copiarAlias() {
     });
 }
 
+// Agregá esta función al final de tu scripts.js
+function guardarCarritoEnLocalStorage() {
+    localStorage.setItem('carrito_panosotros', JSON.stringify(carrito));
+}
+
+
+function verificarHorarioApertura() {
+    const ahora = new Date();
+    const dia = ahora.getDay(); // 0 = Domingo, 6 = Sábado
+    const hora = ahora.getHours();
+    const minutos = ahora.getMinutes();
+    const tiempoActual = hora * 100 + minutos; // Ejemplo: 19:30 -> 1930
+
+    // Días permitidos: Sábado (6) y Domingo (0)
+    const esFinDeSemana = (dia === 6 || dia === 0);
+    
+    // Rango: 19:30 (1930) a 22:45 (2245)
+    const estaEnRangoHora = (tiempoActual >= 1930 && tiempoActual <= 2245);
+
+    return esFinDeSemana && estaEnRangoHora;
+}
+
+// Modificá tu bloque final así:
 document.addEventListener("DOMContentLoaded", async () => {
     await cargarConfiguracion(); 
-    cargarProductosDesdeBD();
+    await cargarProductosDesdeBD(); // Asegurate que los productos carguen antes
+    
+    // Recuperar carrito guardado
+    const carritoGuardado = localStorage.getItem('carrito_panosotros');
+    if (carritoGuardado) {
+        carrito = JSON.parse(carritoGuardado);
+        actualizarBarra(); // Para que aparezca el botón flotante si había algo
+    }
+
     mostrarPantalla('inicio');
     toggleDir(); 
 });
