@@ -69,14 +69,6 @@ async function cargarConfiguracion() {
 // --- NUEVA FUNCIÓN: GUARDAR PEDIDO EN TABLA Y DEVOLVER ID ---
 async function guardarPedidoEnSupabase(datos) {
     try {
-        const ahora = new Date();
-        const fechaParaStreamlit = 
-            ahora.getFullYear() + "-" + 
-            String(ahora.getMonth() + 1).padStart(2, '0') + "-" + 
-            String(ahora.getDate()).padStart(2, '0') + " " + 
-            String(ahora.getHours()).padStart(2, '0') + ":" + 
-            String(ahora.getMinutes()).padStart(2, '0') + ":" + 
-            String(ahora.getSeconds()).padStart(2, '0');
 
         const estadoInicial = (datos.metodo_pago === 'Transferencia') ? "Pendiente de Pago" : "Esperando Confirmacion";
 
@@ -84,7 +76,7 @@ async function guardarPedidoEnSupabase(datos) {
             .from('pedidos')
             .insert([
                 {
-                    fecha: fechaParaStreamlit + "+00",
+                    fecha: new Date().toISOString(),
                     detalle: datos.detalle,
                     cliente: datos.cliente,
                     numero: datos.telefono, // <-- AGREGAR ESTO (asegurate que la columna en Supabase se llame así)
