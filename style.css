@@ -299,6 +299,62 @@ input, select {
     background-color: rgba(253, 250, 245, 0.8) !important;
 }
 
+.titulo-promos {
+    color: var(--oscuro);
+    font-size: 1rem;
+    margin: 16px 0 10px;
+    text-align: left;
+}
+
+.card-promo {
+    border: 1px solid rgba(211, 84, 0, 0.28);
+    background: linear-gradient(135deg, #fff7ed, #ffffff);
+}
+
+.contador-promo {
+    color: var(--naranja);
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.item-promo {
+    gap: 12px;
+}
+
+.cantidad-promo {
+    background: var(--naranja);
+    color: white;
+    border-radius: 999px;
+    min-width: 34px;
+    padding: 7px 10px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.control-promo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f2f2f2;
+    border-radius: 999px;
+    padding: 5px;
+}
+
+.control-promo button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: white;
+    color: var(--naranja);
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.extra-promo-box {
+    border: 1px dashed var(--naranja);
+}
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
