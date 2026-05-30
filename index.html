@@ -27,22 +27,26 @@
     </div>
 
     <section id="inicio">
-        <img src="src/Logo.jpg" alt="Logo Pa Nosotros" style="width: 150px; height: 150px; border-radius: 50%; margin: 0 auto 20px auto; display: block; border: 3px solid #d35400; object-fit: cover;">
-        <p style="font-weight: bold; font-size: 1.1rem;">A un click de que te ames de verdad.</p>
-        <div id="status-local" style="display: none; margin: 15px 0; background: rgba(211, 84, 0, 0.15); padding: 12px; border-radius: 12px; border: 1px dashed var(--naranja); color: #000; font-size: 0.9rem; font-weight: bold;">
-            El local se encuentra cerrado actualmente
+        <img class="home-logo" src="src/Logo.jpg" alt="Logo Pa Nosotros">
+        <p class="hero-title">PA'<br><span>NOSOTROS</span></p>
+        <p class="hero-kicker">Mini burgers</p>
+        <p class="hero-copy">A un click de que te ames de verdad.</p>
+        <div id="status-local">El local se encuentra cerrado actualmente</div>
+
+        <button id="btn-comenzar" class="btn-principal" onclick="mostrarPantalla('menu')">VER MEN&Uacute;</button>
+
+        <div id="home-promo-carousel" class="home-promo-carousel" aria-live="polite"></div>
+
+        <div class="home-info">
+            <div class="home-info-item">
+                <span class="home-info-icon">☆</span>
+                <div>
+                    <h3>S&aacute;bados y Domingos</h3>
+                    <p>19:30 a 22:45</p>
+                </div>
+            </div>
         </div>
 
-        <button id="btn-comenzar" class="btn-principal" onclick="mostrarPantalla('menu')">COMENZAR PEDIDO</button>
-        
-        <button onclick="mostrarPantalla('tracking')" style="background:rgba(255,255,255,0.1); border: 1px solid white; color: white; margin-top: 15px; padding: 12px; border-radius: 50px; width: 100%; font-weight: bold; cursor: pointer; font-size: 0.9rem; backdrop-filter: blur(5px);">🔍 VER MI PEDIDO</button>
-        
-        <div style="margin-top: 25px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);">
-            <h3 style="margin: 0 0 5px 0; font-size: 1.1rem; color: #ff9f43;">Días y Horarios</h3>
-            <p style="margin: 0; font-size: 0.9rem; line-height: 1.6;">Sábados y Domingos <br> 19:30 a 22:45</p>
-        </div>
-
-        <br>
         <button class="btn-redes" onclick="window.location.href='https://www.instagram.com/mminiburgers/'">Nuestro instagram</button>
     </section>
 
@@ -51,55 +55,71 @@
             <source src="src/video-menu.mp4" type="video/mp4">
         </video>
 
-        <div style="position: relative; z-index: 1;">
-            <div onclick="mostrarPantalla('inicio')" style="position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 1.2rem; background: #332d2b; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;">←</div>
-            
-            <h2 style="margin-top: 40px;">Seguí tu Pedido</h2>
-            
-            <div class="cuadro-tracking" style="padding: 20px; background: white; border-radius: 20px; margin-top: 20px; border: 1px solid #eee; text-align: center;">
-                <p style="color: #000; margin-bottom: 15px; font-size: 0.9rem; font-weight: bold;">Ingresá el número de pedido para ver el estado actual.</p>
-                
-                <input type="number" id="input-tracking" placeholder="Ej: 58" style="width: 100%; padding: 15px; border-radius: 12px; font-size: 1.2rem; text-align: center; margin-bottom: 15px; display: block;">
-                
+        <div class="tracking-content">
+            <button class="tracking-back" type="button" onclick="mostrarPantalla('inicio')" aria-label="Volver al inicio">←</button>
+
+            <div class="tracking-header">
+                <span>Estado del pedido</span>
+                <h2>Seguí tu pedido</h2>
+                <p>Ingresá el número que recibiste al confirmar tu compra.</p>
+            </div>
+
+            <div class="cuadro-tracking">
+                <label for="input-tracking">Número de pedido</label>
+                <input type="number" id="input-tracking" placeholder="Ej: 58">
                 <button onclick="consultarEstado()" class="btn-principal">CONSULTAR ESTADO</button>
 
-                <div id="resultado-tracking" style="display: none; margin-top: 30px; padding: 20px; border-radius: 15px; background: #fdfaf5; border: 1px dashed #ccc;">
-                    <p style="font-size: 0.8rem; color: #444; margin-bottom: 5px;">ORDEN #<span id="res-id"></span></p>
-                    <div id="res-badge" style="display: inline-block; padding: 10px 25px; border-radius: 50px; color: white; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
-                    <p style="margin-top: 15px; font-size: 0.75rem; color: #000; font-style: italic;">La información se actualiza al volver a consultar.</p>
+                <div id="resultado-tracking">
+                    <p>Pedido #<span id="res-id"></span></p>
+                    <div id="res-badge"></div>
+                    <small>La información se actualiza al volver a consultar.</small>
                 </div>
             </div>
 
-            <br>
-            <div style="margin: 20px 0 100px 0; background: rgba(255,255,255,0.4); padding: 15px; border-radius: 15px; border: 1px dashed #d35400;">
-                <p style="margin: 0; font-size: 1rem; color: #2e2e2e; font-weight: bold;">Si tenés alguna duda podés consultar por WhatsApp</p>
+            <div class="tracking-help">
+                <p>Si tenés alguna duda, escribinos por WhatsApp.</p>
             </div>
         </div>
     </section>
 
     <section id="menu" style="display:none;">
             <video autoplay muted loop playsinline class="video-fondo">
-                <source src="src/video-menu.mp4" type="video/mp4">
+                <source src="src/video_fondo.mp4" type="video/mp4">
             </video>
 
             <div onclick="mostrarPantalla('inicio')" style="position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 1.2rem; background: #332d2b; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;">←</div>
-            <h2 style="margin-top: 40px; position: relative; z-index: 1;">Nuestro Menú</h2>
+            <button
+                class="menu-tracking-button"
+                type="button"
+                onclick="mostrarPantalla('tracking')"
+            >
+                <span class="tracking-text">Seguí tu pedido</span>
+
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 7h10v10H3z"></path>
+                    <path d="M13 10h4l3 3v4h-7z"></path>
+                    <path d="M7 17.5a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6Z"></path>
+                    <path d="M17 17.5a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6Z"></path>
+                </svg>
+            </button>
+            <h2 style="margin-top: 40px; position: relative; z-index: 1;">Menú</h2>
             
             <div class="lista-productos" id="contenedor-menu" style="position: relative; z-index: 1;"></div>
             
-            <div style="margin: 20px 0 100px 0; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 15px; border: 1px dashed #d35400; position: relative; z-index: 1;">
-                <p style="margin: 0; font-size: 1 rem; color: #000000;">Cada combo contiene 5 miniburguers con papas noisette</p>
+            <div id="menu-combo-note" style="margin: 20px 0 100px 0; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 15px; border: 1px dashed #d35400; position: relative; z-index: 1;">
+                <p style="margin: 0; font-size: 1 rem; color: #000000;">Cada combo contiene 5 mini burgers con papas noisette</p>
             </div>
             
             <button class="btn-carrito" id="btn-flotante-carrito" onclick="irAlCheckout()" style="display:none;">
-                <span>Ver pedido (<span id="cart-count">0</span>)</span>
-                <span>$<span id="cart-total">0</span></span>
+                <span class="cart-icon" aria-hidden="true">🛒</span>
+                <span class="cart-action">Ver pedido (<span id="cart-count">0</span>)</span>
+                <span class="cart-price">$<span id="cart-total">0</span></span>
             </button>
     </section>
 
     <section id="detalle-producto" style="display:none;">
         <div class="header-detalle">
-            <button onclick="mostrarPantalla('menu')" class="btn-cerrar-detalle">✕</button>
+            <button onclick="mostrarPantalla('menu')" class="btn-cerrar-detalle" aria-label="Volver al menú">←</button>
         </div>
         <div id="contenido-detalle"></div>
         <div class="footer-fijo-detalle">
@@ -115,38 +135,101 @@
     </section>
 
     <section id="checkout" style="display:none;">
-        <div id="resumen-pedido"></div>
-        <div class="form-group"><label>Tu Nombre:</label><input type="text" id="nombre-cliente" placeholder="Ej: Juan"></div>
-        <div class="form-group">
-            <label>Tu WhatsApp:</label>
-            <input type="tel" id="telefono-cliente" placeholder="Ej: 2215556677">
-        </div>
-        <div class="form-group">
-            <label>¿Cómo recibís?</label>
-            <select id="metodo-entrega" onchange="toggleDir(); actualizarResumenCheckout()">
-                <option value="Delivery">Delivery</option>
-                <option value="Retiro">Retiro en local</option>
-            </select>
-        </div>
-        <div id="campo-dir" class="form-group"><label>Dirección:</label><input type="text" id="dir-cliente" placeholder="Calle y número"></div>
-        <div class="form-group">
-            <label>Forma de Pago:</label>
-            <select id="metodo-pago" onchange="togglePago()"> 
-                <option value="Efectivo">Efectivo</option>
-                <option value="Transferencia">Transferencia</option>
-            </select>
+        <button class="checkout-back" type="button" onclick="mostrarPantalla('menu')" aria-label="Volver al menú">←</button>
+        <div id="checkout-step-pedido" class="checkout-step">
+            <div id="resumen-pedido"></div>
+            <button class="btn-principal" onclick="mostrarPasoCheckout('datos')">COMPLETAR DATOS</button>
         </div>
 
-        <div id="info-transferencia" style="display:none;">
-            <p>💳 <strong>Alias:</strong> <span id="alias-texto" style="font-weight: bold; color: #d35400;">Cargando...</span></p>
-            <button class="btn-copiar" onclick="copiarAlias()">📋 COPIAR ALIAS</button>
-            <p style="margin-top:10px; font-size:0.8rem; color:#666;">📲 Enviá el comprobante al WhatsApp al finalizar</p>
+        <div id="checkout-step-datos" class="checkout-step" style="display:none;">
+            <div class="form-group"><label>Tu Nombre:</label><input type="text" id="nombre-cliente" placeholder="Ej: Juan"></div>
+            <div class="form-group">
+                <label>Tu WhatsApp:</label>
+                <input type="tel" id="telefono-cliente" placeholder="Ej: 2215556677">
+            </div>
+            <div class="form-group">
+                <label>¿Cómo recibís?</label>
+                <div class="checkout-option-grid">
+                    <button type="button" class="checkout-option active" data-select="metodo-entrega" data-value="Delivery" onclick="seleccionarOpcionCheckout(this)">
+                        <strong>Delivery</strong>
+                        <span>Te lo llevamos</span>
+                        <em>+$<span data-envio-label>0</span></em>
+                    </button>
+                    <button type="button" class="checkout-option" data-select="metodo-entrega" data-value="Retiro" onclick="seleccionarOpcionCheckout(this)">
+                        <strong>Retiro</strong>
+                        <span>En el local</span>
+                        <em>Sin costo</em>
+                    </button>
+                </div>
+                <select id="metodo-entrega" class="checkout-native-select" onchange="toggleDir(); actualizarResumenCheckout()">
+                    <option value="Delivery">Delivery</option>
+                    <option value="Retiro">Retiro en local</option>
+                </select>
+                <small id="texto-costo-envio" class="checkout-help"></small>
+            </div>
+            <div id="campo-dir" class="form-group"><label>Dirección:</label><input type="text" id="dir-cliente" placeholder="Calle y número"></div>
+            <div class="form-group">
+                <label>Forma de Pago:</label>
+                <div class="checkout-option-grid">
+                    <button type="button" class="checkout-option active" data-select="metodo-pago" data-value="Efectivo" onclick="seleccionarOpcionCheckout(this)">
+                        <strong>Efectivo</strong>
+                        <span>Pagás al recibir</span>
+                    </button>
+                    <button type="button" class="checkout-option" data-select="metodo-pago" data-value="Transferencia" onclick="seleccionarOpcionCheckout(this)">
+                        <strong>Transferencia</strong>
+                        <span>Copiás el alias</span>
+                    </button>
+                </div>
+                <select id="metodo-pago" class="checkout-native-select" onchange="togglePago()">
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Transferencia">Transferencia</option>
+                </select>
+            </div>
+
+            <div id="info-transferencia" style="display:none;">
+                <p>💳 <strong>Alias:</strong> <span id="alias-texto" style="font-weight: bold; color: #d35400;">Cargando...</span></p>
+                <button class="btn-copiar" onclick="copiarAlias()">📋 COPIAR ALIAS</button>
+                <p style="margin-top:10px; font-size:0.8rem; color:#666;">📲 Enviá el comprobante al WhatsApp al finalizar</p>
+            </div>
+
+            <button id="btn-confirmar-pedido" class="btn-principal" onclick="enviarWhatsApp()">CONFIRMAR PEDIDO</button>
         </div>
 
-        <button class="btn-principal" onclick="enviarWhatsApp()">CONFIRMAR POR WHATSAPP</button>
-        <p onclick="mostrarPantalla('menu')" style="cursor:pointer; color:gray; margin-top:20px;">⬅ Volver al menú</p>
+        <div id="checkout-step-confirmando" class="checkout-step checkout-confirming" style="display:none;">
+            <div class="checkout-confirming-icon"></div>
+            <h3>Confirmando tu pedido</h3>
+            <p>Estamos guardando el pedido y preparando WhatsApp.</p>
+            <span>Redirigiendo...</span>
+        </div>
+
+        <div id="checkout-step-confirmado" class="checkout-step checkout-confirmed" style="display:none;">
+            <video autoplay muted loop playsinline class="checkout-confirmed-video">
+                <source src="src/video_fondo.mp4" type="video/mp4">
+            </video>
+            <div class="checkout-confirmed-overlay"></div>
+            <div class="checkout-confirmed-content">
+                <div class="confirmed-logo-progress">
+                    <img src="src/Logo.jpg" alt="Pa Nosotros">
+                    <span></span>
+                </div>
+                <h3>Pedido creado #<span id="pedido-confirmado-numero">--</span></h3>
+                <p>Redirigiendo a WhatsApp para enviar el detalle del pedido.</p>
+                <div class="confirmed-progress-bar" aria-hidden="true"></div>
+                <small>Total $<span id="pedido-confirmado-total">0</span></small>
+                <button id="btn-abrir-whatsapp-confirmado" class="btn-principal" type="button" onclick="abrirWhatsappConfirmado()">IR A WHATSAPP</button>
+                <button class="btn-principal" type="button" onclick="volverMenuPedidoConfirmado()">VOLVER AL MENÚ</button>
+            </div>
+        </div>
     </section>
 
+    <script src="js/state.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/tracking.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/checkout.js"></script>
     <script src="scripts.js"></script>
 </body>
 </html>
