@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         actualizarBarra();
     }
 
+    renderHomePromos();
     mostrarPantalla("inicio");
     toggleDir();
 });

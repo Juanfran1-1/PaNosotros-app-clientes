@@ -1,0 +1,155 @@
+#menu,
+#tracking,
+#checkout {
+    padding: 26px 18px 112px;
+}
+
+#menu {
+    background:
+        radial-gradient(circle at 86% 4%, rgba(255, 204, 0, 0.08), transparent 28%),
+        linear-gradient(180deg, #050505 0%, #030303 100%);
+}
+
+#menu h2,
+#tracking h2 {
+    margin-top: 38px !important;
+    color: #fff;
+    text-align: left;
+    text-transform: uppercase;
+    font-size: 2.25rem;
+    line-height: 0.95;
+}
+
+.menu-subtitle {
+    position: relative;
+    z-index: 1;
+    margin: -6px 0 14px;
+    color: var(--muted);
+    text-align: left;
+    font-size: 1rem;
+}
+
+.menu-tabs {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin-bottom: 6px;
+    padding: 0 0 14px;
+    scrollbar-width: none;
+}
+
+.menu-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.menu-tabs button {
+    flex: 0 0 auto;
+    padding: 10px 13px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.menu-tabs button.active {
+    background: var(--amarillo);
+    color: #050505;
+}
+
+.titulo-promos {
+    margin: 24px 0 12px;
+    color: #fff;
+    text-align: left;
+    text-transform: uppercase;
+    font-size: 0.92rem;
+    font-weight: 900;
+}
+
+.titulo-promos:first-child::before {
+    content: "🔥 ";
+}
+
+.card-promo {
+    min-height: 136px;
+    align-items: stretch;
+    background:
+        radial-gradient(circle at 88% 12%, rgba(255, 204, 0, 0.24), transparent 28%),
+        linear-gradient(120deg, rgba(255, 204, 0, 0.18), rgba(255, 255, 255, 0.04)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.02));
+}
+
+.card-promo .img-producto {
+    width: 102px;
+    height: auto;
+    min-height: 112px;
+}
+
+.menu-card-tag {
+    width: fit-content;
+    margin-bottom: 5px;
+    display: inline-flex;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(255, 204, 0, 0.14);
+    color: var(--amarillo);
+    text-transform: uppercase;
+    font-size: 0.64rem;
+    font-weight: 950;
+}
+
+.menu-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.menu-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.07), transparent 42%);
+    pointer-events: none;
+}
+
+.menu-card .info,
+.menu-card .btn-op,
+.menu-card .img-producto {
+    position: relative;
+    z-index: 1;
+}
+
+#menu > div[style*="dashed"] {
+    background: rgba(255, 204, 0, 0.08) !important;
+    border-color: rgba(255, 204, 0, 0.28) !important;
+}
+
+#menu > div[style*="dashed"] p {
+    color: rgba(255, 255, 255, 0.78) !important;
+}
+
+.menu-empty {
+    margin-top: 24px;
+    padding: 22px 18px;
+    border: 1px dashed rgba(255, 204, 0, 0.32);
+    border-radius: 18px;
+    background: rgba(255, 204, 0, 0.08);
+    color: rgba(255, 255, 255, 0.78);
+    text-align: center;
+}
+
+.menu-empty h3 {
+    margin-bottom: 8px;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.menu-empty p {
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.88rem;
+}

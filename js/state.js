@@ -12,12 +12,16 @@ let pantallaDestinoTemporal = null;
 let productos = [];
 let promos = [];
 let extras = [];
+let filtroMenu = 'todas';
 let COSTO_ENVIO = 0;
 let cantidadesPromo = {};
 let extraPromoSeleccionado = null;
+let aclaracionPromoDetalle = '';
+let whatsappPedidoUrl = '';
 
 let configTienda = {
     whatsapp: "",
     alias_mp: "",
     abierto: true,
+    promo_titulo: "",
 };

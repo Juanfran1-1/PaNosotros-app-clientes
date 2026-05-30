@@ -1,0 +1,525 @@
+#checkout {
+    position: relative;
+    text-align: left;
+}
+
+#checkout::before {
+    content: "TU PEDIDO";
+    display: block;
+    height: 38px;
+    margin: 16px 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 900;
+}
+
+#checkout.checkout-paso-datos::before {
+    content: "TUS DATOS";
+}
+
+#checkout.checkout-paso-confirmando::before {
+    content: "";
+    margin-bottom: 0;
+}
+
+#checkout.checkout-paso-confirmado::before {
+    content: "";
+    margin-bottom: 0;
+}
+
+.checkout-back {
+    position: absolute;
+    top: 24px;
+    left: 18px;
+    z-index: 5;
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 13px;
+    background: rgba(5, 5, 5, 0.72);
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: 900;
+}
+
+.checkout-step {
+    animation: checkoutStepIn 0.22s ease-out;
+}
+
+@keyframes checkoutStepIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#resumen-pedido {
+    color: #fff;
+}
+
+.checkout-summary-head {
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #fff;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+
+.checkout-summary-head strong {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--amarillo);
+    color: #050505;
+    font-size: 0.86rem;
+}
+
+.checkout-item {
+    position: relative;
+    min-height: 104px;
+    margin-bottom: 12px;
+    padding: 14px 14px 14px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    border: 1px solid var(--linea);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.028));
+    color: #fff;
+}
+
+.checkout-remove {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.72);
+    cursor: pointer;
+    font-weight: 900;
+}
+
+.checkout-item-main {
+    min-width: 0;
+    padding-right: 20px;
+}
+
+.checkout-item-main strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #fff;
+    font-size: 1rem;
+    line-height: 1.12;
+}
+
+.checkout-item-detail {
+    display: grid;
+    gap: 5px;
+}
+
+.checkout-item-detail small {
+    color: rgba(255, 204, 0, 0.82);
+    font-size: 0.78rem;
+    line-height: 1.25;
+}
+
+.checkout-item-side {
+    padding-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.checkout-item-side > span {
+    color: #fff;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.checkout-qty {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.checkout-qty button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: #fff;
+    color: #050505;
+    cursor: pointer;
+    font-weight: 900;
+}
+
+.checkout-qty span {
+    min-width: 20px;
+    color: #fff;
+    text-align: center;
+    font-weight: 900;
+}
+
+.checkout-totals {
+    margin: 18px 0 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--linea);
+}
+
+.checkout-totals p,
+.checkout-totals h3 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 10px;
+    color: #fff !important;
+}
+
+.checkout-totals p {
+    color: var(--muted) !important;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.checkout-totals h3 {
+    margin-top: 12px;
+    padding-top: 14px;
+    border-top: 1px solid var(--linea);
+    text-transform: uppercase;
+    font-size: 1.08rem;
+}
+
+.checkout-totals h3 strong {
+    color: var(--amarillo);
+    font-size: 1.35rem;
+}
+
+.form-group {
+    width: 100%;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.form-group label {
+    color: #fff;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    font-weight: 900;
+}
+
+.checkout-help {
+    display: block;
+    margin-top: 8px;
+    color: var(--amarillo);
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.checkout-reveal {
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.checkout-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.checkout-native-select {
+    display: none;
+}
+
+.checkout-option-grid {
+    margin-top: 9px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.checkout-option {
+    min-height: 96px;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid var(--linea);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.045);
+    color: #fff;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+}
+
+.checkout-option strong {
+    color: #fff;
+    font-size: 0.98rem;
+}
+
+.checkout-option span {
+    color: var(--muted);
+    font-size: 0.8rem;
+    line-height: 1.2;
+}
+
+.checkout-option em {
+    color: var(--amarillo);
+    font-size: 0.78rem;
+    font-style: normal;
+    font-weight: 900;
+}
+
+.checkout-option.active {
+    border-color: rgba(255, 204, 0, 0.8);
+    background:
+        radial-gradient(circle at 88% 16%, rgba(255, 204, 0, 0.2), transparent 34%),
+        rgba(255, 204, 0, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(255, 204, 0, 0.24);
+}
+
+.checkout-option.active::after {
+    content: "✓";
+    align-self: flex-end;
+    width: 24px;
+    height: 24px;
+    margin-top: -22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--amarillo);
+    color: #050505;
+    font-weight: 900;
+}
+
+#info-transferencia {
+    margin-bottom: 15px;
+    padding: 15px;
+    border: 1px solid rgba(255, 204, 0, 0.25);
+    border-radius: 12px;
+    background: rgba(255, 204, 0, 0.08);
+    color: #fff;
+    text-align: left;
+}
+
+.checkout-confirming {
+    min-height: calc(100vh - 170px);
+    padding: 80px 10px 40px;
+    color: #fff;
+    text-align: center;
+}
+
+.checkout-confirming-icon {
+    width: 82px;
+    height: 82px;
+    margin: 0 auto 24px;
+    border: 6px solid rgba(255, 204, 0, 0.18);
+    border-top-color: var(--amarillo);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+
+.checkout-confirmed {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    margin: 0 auto;
+    overflow: hidden;
+    color: #fff;
+    text-align: center;
+}
+
+.checkout-confirmed-video,
+.checkout-confirmed-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.checkout-confirmed-video {
+    object-fit: cover;
+}
+
+.checkout-confirmed-overlay {
+    background:
+        radial-gradient(circle at 50% 22%, rgba(255, 204, 0, 0.18), transparent 30%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.48), rgba(0, 0, 0, 0.92));
+}
+
+.checkout-confirmed-content {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    padding: 78px 22px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.confirmed-logo-progress {
+    position: relative;
+    width: 124px;
+    height: 124px;
+    margin-bottom: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: transparent;
+}
+
+.confirmed-logo-progress img {
+    position: relative;
+    z-index: 1;
+    width: 124px;
+    height: 124px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.confirmed-logo-progress span {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 42px rgba(255, 204, 0, 0.2);
+}
+
+.checkout-confirming h3,
+.checkout-confirmed h3 {
+    margin-bottom: 10px;
+    color: #fff;
+    font-size: 1.65rem;
+}
+
+.checkout-confirming p,
+.checkout-confirmed p {
+    max-width: 290px;
+    margin: 0 auto 18px;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.checkout-confirming span {
+    color: var(--amarillo);
+    text-transform: uppercase;
+    font-size: 0.86rem;
+    font-weight: 900;
+}
+
+.confirmed-progress-bar {
+    width: min(280px, 100%);
+    height: 7px;
+    margin: 8px auto 18px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.confirmed-progress-bar::before {
+    content: "";
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--amarillo);
+    animation: fillConfirmBar 3.2s ease-out forwards;
+}
+
+@keyframes fillConfirmBar {
+    to {
+        width: 100%;
+    }
+}
+
+.checkout-confirmed-content > small {
+    margin-bottom: 28px;
+    color: var(--amarillo);
+    text-transform: uppercase;
+    font-size: 0.86rem;
+    font-weight: 900;
+}
+
+.checkout-confirmed-content .btn-principal {
+    max-width: 290px;
+    margin-bottom: 14px;
+}
+
+#btn-abrir-whatsapp-confirmado {
+    margin-bottom: 22px;
+    border: 1px solid rgba(255, 204, 0, 0.48);
+    background: rgba(5, 5, 5, 0.16);
+    color: var(--amarillo);
+    box-shadow: none;
+    backdrop-filter: blur(1px) saturate(0.12);
+    -webkit-backdrop-filter: blur(1px) saturate(0.12);
+}
+
+.checkout-confirmed-content .btn-principal:last-child {
+    border: none;
+    background: var(--amarillo);
+    color: #050505;
+    box-shadow: 0 16px 32px rgba(255, 190, 0, 0.22);
+}
+
+#info-transferencia p {
+    color: #fff !important;
+}
+
+#alias-texto {
+    color: var(--amarillo) !important;
+}
+
+.btn-copiar {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 15px;
+    border: 1px solid rgba(255, 204, 0, 0.45);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--amarillo);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 900;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-copiar.copiado {
+    border-color: var(--amarillo);
+    background: var(--amarillo);
+    color: #050505;
+    transform: translateY(-1px);
+}

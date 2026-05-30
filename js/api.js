@@ -35,7 +35,7 @@ async function cargarConfiguracion() {
                 }
             } else {
                 if (btnPedido) {
-                    btnPedido.innerText = "COMENZAR PEDIDO";
+                    btnPedido.innerText = "VER MENÚ";
                     btnPedido.style.background = "var(--naranja)";
                 }
                 if (statusLocal) statusLocal.style.display = 'none';
@@ -90,7 +90,7 @@ async function guardarItemsPedidoEnSupabase(pedidoId) {
                 hamburguesa_id: esPromo ? null : item.id,
                 promo_id: esPromo ? item.id : null,
                 tipo_item: esPromo ? 'promo' : 'hamburguesa',
-                nombre_snapshot: item.detalle_snapshot || item.nombre,
+                nombre_snapshot: item.nombre_snapshot || item.nombre,
                 precio_unitario: item.precio,
                 cantidad: item.cantidad,
                 subtotal: subtotal
@@ -126,7 +126,7 @@ async function cargarProductosDesdeBD() {
         // Actualizamos la variable global 'productos' con los datos más recientes
         productos = data.map(p => ({
             ...p,
-            foto: p.foto ? `src/${p.foto}` : 'src/Logo.jpg', 
+            foto: normalizarFotoProducto(p.foto),
             desc: p.desc || 'Combo de mini burgers.',
             ingredientes: p.ingredientes ? p.ingredientes.split(',').map(i => i.trim()) : []
         }));
@@ -135,6 +135,40 @@ async function cargarProductosDesdeBD() {
         console.error("Error cargando base de datos:", err);
         mostrarMensaje("Error al actualizar el menú ❌", 3000);
     }
+}
+
+function normalizarFotoProducto(foto) {
+    if (!foto) return 'src/Logo.jpg';
+
+    const nombreFoto = foto.trim();
+    if (nombreFoto.toLowerCase() === 'parri-llera.png') {
+        return 'src/Parri-Llera.webp';
+    }
+
+    if (nombreFoto.toLowerCase() === 'veggie smalls.png') {
+        return 'src/Veggie Smalls.webp';
+    }
+
+    if (nombreFoto.toLowerCase() === 'cheddy krueger.png') {
+        return 'src/Cheddy Krueger.webp';
+    }
+
+    return `src/${nombreFoto}`;
+}
+
+function normalizarFotoPromo(foto, nombre) {
+    const nombrePromo = (nombre || '').toUpperCase();
+    const nombreFoto = foto ? foto.trim() : '';
+
+    if (nombrePromo.includes('GORDITXS LIGHT')) {
+        return 'src/PROMO GORDITXS LIGHT.webp';
+    }
+
+    if (nombrePromo.includes('GORDITXS')) {
+        return 'src/PROMO GORDITXS.webp';
+    }
+
+    return nombreFoto ? `src/${nombreFoto}` : 'src/Fondo.jpg';
 }
 
 async function cargarPromosDesdeBD() {
@@ -155,7 +189,7 @@ async function cargarPromosDesdeBD() {
 
         promos = (promosData || []).map(promo => ({
             ...promo,
-            foto: promo.foto ? `src/${promo.foto}` : 'src/Fondo.jpg',
+            foto: normalizarFotoPromo(promo.foto, promo.nombre),
             promo_items: promo.promo_items || []
         }));
 

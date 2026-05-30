@@ -1,4 +1,66 @@
 // 8. ENVÍO A WHATSAPP Y GUARDADO EN BD (CON VALIDACIÓN DE STOCK DINÁMICA)
+function mostrarPasoCheckout(paso) {
+    const checkout = document.getElementById('checkout');
+    const pasos = {
+        pedido: document.getElementById('checkout-step-pedido'),
+        datos: document.getElementById('checkout-step-datos'),
+        confirmando: document.getElementById('checkout-step-confirmando'),
+        confirmado: document.getElementById('checkout-step-confirmado')
+    };
+
+    if (checkout) {
+        checkout.classList.remove('checkout-paso-pedido', 'checkout-paso-datos', 'checkout-paso-confirmando', 'checkout-paso-confirmado');
+        checkout.classList.add(`checkout-paso-${paso}`);
+    }
+
+    Object.values(pasos).forEach(step => {
+        if (step) step.style.display = 'none';
+    });
+
+    if (pasos[paso]) pasos[paso].style.display = 'block';
+
+    const back = document.querySelector('.checkout-back');
+    if (back) {
+        back.onclick = paso === 'datos'
+            ? () => mostrarPasoCheckout('pedido')
+            : () => mostrarPantalla('menu');
+        back.style.display = (paso === 'confirmando' || paso === 'confirmado') ? 'none' : 'inline-flex';
+    }
+
+    if (paso === 'pedido') {
+        actualizarResumenCheckout();
+    }
+
+    window.scrollTo(0, 0);
+}
+
+function limpiarCarritoConfirmado() {
+    carrito = [];
+    localStorage.removeItem('carrito_panosotros');
+    if (typeof actualizarBarra === 'function') actualizarBarra();
+}
+
+function abrirWhatsappConfirmado() {
+    if (!whatsappPedidoUrl) return;
+    limpiarCarritoConfirmado();
+    window.location.href = whatsappPedidoUrl;
+}
+
+function volverMenuPedidoConfirmado() {
+    limpiarCarritoConfirmado();
+    mostrarPantalla('menu');
+}
+
+function previewPedidoConfirmado() {
+    whatsappPedidoUrl = '#';
+    const confirmadoNumero = document.getElementById('pedido-confirmado-numero');
+    const confirmadoTotal = document.getElementById('pedido-confirmado-total');
+    if (confirmadoNumero) confirmadoNumero.innerText = '366';
+    if (confirmadoTotal) confirmadoTotal.innerText = total || 32000;
+    mostrarPantalla('checkout');
+    setTimeout(() => mostrarPasoCheckout('confirmado'), 350);
+}
+
 async function enviarWhatsApp() {
     // 1. Validar si el local está abierto
     try {
@@ -85,14 +147,15 @@ async function enviarWhatsApp() {
         return;
     }
 
-    const btnConfirmar = document.querySelector('#checkout .btn-principal');
+    const btnConfirmar = document.getElementById('btn-confirmar-pedido');
     
     if (btnConfirmar) {
         btnConfirmar.disabled = true;
-        btnConfirmar.innerText = "⏳ PROCESANDO...";
+        btnConfirmar.innerText = "PROCESANDO...";
         btnConfirmar.style.opacity = "0.6";
         btnConfirmar.style.cursor = "not-allowed";
     }
+    mostrarPasoCheckout('confirmando');
 
     const detalleBD = carrito.map(item => {
         let texto = `${item.cantidad}x ${item.nombre.trim()}`;
@@ -124,12 +187,6 @@ async function enviarWhatsApp() {
             }
         }
 
-        let msgconfir = "✅ ¡Pedido confirmado!";
-        if (pago === 'Transferencia') {
-            msgconfir = "✅ ¡Pedido registrado!\n\n⚠️ RECUERDA:\nConsultá disponibilidad de stock\nantes de transferir.";
-        }
-        mostrarMensaje(msgconfir, 5000);
-
         let msg = ` *PEDIDO #${idGenerado || 'N/A'}* \n\n`;
         msg += `*Tu nombre:* ${nombre}\n*Entrega:* ${entrega}\n`;
         if (entrega === 'Delivery') msg += `*Dirección:* ${dir}\n`;
@@ -150,6 +207,10 @@ async function enviarWhatsApp() {
             msg += `Envío: $${COSTO_ENVIO}\n`;
         
         }
+        if(entrega === "Retiro") {
+            msg += `Retirar por 119 e/81 y 82\n`;
+        
+        }
         msg += `\n*TOTAL: $${total}*\n\n`;
 
         msg += `--------------------------\n`;
@@ -157,32 +218,35 @@ async function enviarWhatsApp() {
         if (pago === 'Transferencia') msg += `--------------------------\n`;
         msg += `Podés consultar el estado de tu pedido con el número *#${idGenerado}* en nuestra web.`;
 
+        whatsappPedidoUrl = `https://wa.me/${configTienda.whatsapp}?text=${encodeURIComponent(msg)}`;
+        const confirmadoNumero = document.getElementById('pedido-confirmado-numero');
+        const confirmadoTotal = document.getElementById('pedido-confirmado-total');
+        if (confirmadoNumero) confirmadoNumero.innerText = idGenerado || 'N/A';
+        if (confirmadoTotal) confirmadoTotal.innerText = total;
+        mostrarPasoCheckout('confirmado');
+
         setTimeout(() => {
-            const wspUrl = `https://wa.me/${configTienda.whatsapp}?text=${encodeURIComponent(msg)}`;
-            
-            carrito = [];
-            localStorage.removeItem('carrito_panosotros')
-            if (typeof actualizarBarra === 'function') actualizarBarra();
-            window.location.href = wspUrl;
+            abrirWhatsappConfirmado();
             
             setTimeout(() => {
                 if (btnConfirmar) {
                     btnConfirmar.disabled = false;
-                    btnConfirmar.innerText = "CONFIRMAR POR WHATSAPP";
+                    btnConfirmar.innerText = "CONFIRMAR PEDIDO";
                     btnConfirmar.style.opacity = "1";
                     btnConfirmar.style.cursor = "pointer";
                 }
                 mostrarPantalla('inicio');
             }, 1000);
-        }, 1500);
+        }, 3800);
 
     } catch (err) {
         console.error(err);
         mostrarMensaje("❌ Error de conexión. Reintenta.", 3000);
         if (btnConfirmar) {
             btnConfirmar.disabled = false;
-            btnConfirmar.innerText = "CONFIRMAR POR WHATSAPP";
+            btnConfirmar.innerText = "CONFIRMAR PEDIDO";
             btnConfirmar.style.opacity = "1";
         }
+        mostrarPasoCheckout('datos');
     }
 }

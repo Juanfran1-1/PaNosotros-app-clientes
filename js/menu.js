@@ -1,5 +1,17 @@
 // 5. CARGAR MENÚ
 // En cargarMenu, hacemos que las tarjetas no abran el detalle si está cerrado
+function cambiarFiltroMenu(filtro) {
+    filtroMenu = filtro;
+    cargarMenu();
+}
+
+function renderFiltroMenu(nombre, filtro) {
+    return `
+        <button type="button" class="${filtroMenu === filtro ? 'active' : ''}" onclick="cambiarFiltroMenu('${filtro}')">
+            ${nombre}
+        </button>`;
+}
+
 function cargarMenu() {
     const contenedor = document.getElementById('contenedor-menu');
     if (!contenedor) return;
@@ -7,19 +19,35 @@ function cargarMenu() {
 
     // Verificar si el local está cerrado para el modo "solo lectura"
     const localCerrado = !configTienda.abierto ;
+    const mostrarPromos = filtroMenu === 'todas' || filtroMenu === 'promos';
+    const mostrarMinis = filtroMenu === 'todas' || filtroMenu === 'minis';
+    const comboNote = document.getElementById('menu-combo-note');
+    if (comboNote) {
+        comboNote.style.display = filtroMenu === 'promos' ? 'none' : '';
+    }
 
-    if (promos.length > 0) {
+    contenedor.innerHTML += `
+        <p class="menu-subtitle">Elegí tus favoritos</p>
+        <div class="menu-tabs" aria-label="Categorías del menú">
+            ${renderFiltroMenu('Todas', 'todas')}
+            ${renderFiltroMenu('Minis', 'minis')}
+            ${renderFiltroMenu('Promos', 'promos')}
+        </div>
+    `;
+
+    if (mostrarPromos && promos.length > 0) {
         contenedor.innerHTML += `
-            <h3 class="titulo-promos">Promos</h3>
+            <h3 class="titulo-promos">Promos destacadas</h3>
             ${promos.map(promo => {
                 const accionPromo = localCerrado
                     ? "mostrarMensaje('El local está cerrado.', 3000)"
                     : `abrirDetallePromo(${promo.id})`;
 
                 return `
-                    <div class="card card-promo" onclick="${accionPromo}">
+                    <div class="card card-promo menu-card" onclick="${accionPromo}">
                         <img src="${promo.foto}" class="img-producto" onerror="this.src='src/Fondo.jpg'">
                         <div class="info">
+                            <span class="menu-card-tag">Promo</span>
                             <h3>${promo.nombre}</h3>
                             <span class="desc-texto">${promo.descripcion || 'Promo especial.'}</span>
                             <p>$${promo.precio}</p>
@@ -27,41 +55,54 @@ function cargarMenu() {
                         <button class="btn-op">+</button>
                     </div>`;
             }).join('')}
-            <h3 class="titulo-promos">Mini burgers</h3>
         `;
     }
 
-    productos.forEach(p => {
-        const estaAgotado = (p.disponible === false);
-        
-        // Lógica de click
-        let accionClick = `abrirDetalle(${p.id})`;
-        if (localCerrado) {
-            // Si está cerrado, solo mostramos el mensaje pero no abrimos el detalle
-            accionClick = "mostrarMensaje('El local está cerrado.', 3000)";
-        } else if (estaAgotado) {
-            accionClick = "mostrarMensaje('¡Sin stock por hoy! 🍔')";
-        }
-
+    if (mostrarMinis) {
         contenedor.innerHTML += `
-            <div class="card ${estaAgotado ? 'agotado' : ''}" onclick="${accionClick}">
-                
-                <img src="${p.foto}" class="img-producto" onerror="this.src='Logo.jpg'" 
-                    style="${estaAgotado ? 'filter: grayscale(1); opacity: 0.5;' : ''}">
-                
-                <div class="info">
-                    <h3>
-                        ${p.nombre} ${estaAgotado ? '<span class="tag-agotado">(AGOTADO)</span>' : ''}
-                    </h3>
-                    <span class="desc-texto">${p.desc}</span>
-                    <p>${estaAgotado ? '---' : '$' + p.precio}</p>
-                </div>
-                
-                <button class="btn-op" style="${estaAgotado ? 'background: #ccc; cursor: not-allowed;' : ''}">
-                    ${localCerrado ? '-' : (estaAgotado ? '✕' : '+')}
-                </button>
-            </div>`;
-    });
+            <h3 class="titulo-promos">${filtroMenu === 'minis' ? 'Mini burgers' : 'MINIS'}</h3>
+        `;
+
+        productos.forEach(p => {
+            const estaAgotado = (p.disponible === false);
+
+            // Lógica de click
+            let accionClick = `abrirDetalle(${p.id})`;
+            if (localCerrado) {
+                // Si está cerrado, solo mostramos el mensaje pero no abrimos el detalle
+                accionClick = "mostrarMensaje('El local está cerrado.', 3000)";
+            } else if (estaAgotado) {
+                accionClick = "mostrarMensaje('¡Sin stock por hoy! 🍔')";
+            }
+
+            contenedor.innerHTML += `
+                <div class="card menu-card ${estaAgotado ? 'agotado' : ''}" onclick="${accionClick}">
+
+                    <img src="${p.foto}" class="img-producto" onerror="this.src='src/Logo.jpg'"
+                        style="${estaAgotado ? 'filter: grayscale(1); opacity: 0.5;' : ''}">
+
+                    <div class="info">
+                        <h3>
+                            ${p.nombre} ${estaAgotado ? '<span class="tag-agotado">(AGOTADO)</span>' : ''}
+                        </h3>
+                        <span class="desc-texto">${p.desc}</span>
+                        <p>${estaAgotado ? '---' : '$' + p.precio}</p>
+                    </div>
+
+                    <button class="btn-op" style="${estaAgotado ? 'background: #ccc; cursor: not-allowed;' : ''}">
+                        ${localCerrado ? '-' : (estaAgotado ? '✕' : '+')}
+                    </button>
+                </div>`;
+        });
+    }
+
+    if (filtroMenu === 'promos' && promos.length === 0) {
+        contenedor.innerHTML += `
+            <div class="menu-empty">
+                <h3>No hay promos activas</h3>
+            </div>
+        `;
+    }
 
     // Ocultar el botón flotante del carrito si el local está cerrado
     const btnCarrito = document.getElementById('btn-flotante-carrito');
@@ -81,6 +122,7 @@ function abrirDetallePromo(id) {
     cantidadEnDetalle = 1;
     cantidadesPromo = {};
     extraPromoSeleccionado = null;
+    aclaracionPromoDetalle = '';
     renderDetallePromo();
     mostrarPantalla('detalle-producto');
 }
@@ -116,12 +158,14 @@ function renderDetallePromo() {
     const totalElegido = totalPromoSeleccionado();
 
     cont.innerHTML = `
-        <img src="${promo.foto}" onerror="this.src='src/Fondo.jpg'">
+        <div class="detalle-hero">
+            <img src="${promo.foto}" onerror="this.src='src/Fondo.jpg'">
+        </div>
         <div class="info-detalle">
             <h2>${promo.nombre}</h2>
-            <p style="color: #666; font-size: 0.9rem;">${promo.descripcion || ''}</p>
+            <p>${promo.descripcion || ''}</p>
             <div class="lista-quitar">
-                <p style="font-weight: bold; margin-bottom: 10px; font-size: 0.85rem; color: #333;">
+                <p class="detalle-section-title">
                     Elegí ${config.cantidadTotal} mini burgers ${config.maxVariedades === 1 ? 'del mismo tipo' : 'combinando hasta 2 variedades'}
                 </p>
                 <p class="contador-promo">${totalElegido}/${config.cantidadTotal} seleccionadas</p>
@@ -130,14 +174,20 @@ function renderDetallePromo() {
                     if (config.maxVariedades === 1) {
                         return `
                             <div class="item-check item-promo" onclick="seleccionarVariedadUnicaPromo(${v.id})">
-                                <label><span class="prefix">Variedad</span><span class="nombre-ing">${v.nombre}</span></label>
+                                <label>
+                                    <span class="nombre-ing">${v.nombre}</span>
+                                    <span class="desc-variedad-promo">${v.desc || ''}</span>
+                                </label>
                                 <span class="cantidad-promo">${cant ? config.cantidadTotal : '+'}</span>
                             </div>`;
                     }
 
                     return `
                         <div class="item-check item-promo">
-                            <label><span class="prefix">Variedad</span><span class="nombre-ing">${v.nombre}</span></label>
+                            <label>
+                                <span class="nombre-ing">${v.nombre}</span>
+                                <span class="desc-variedad-promo">${v.desc || ''}</span>
+                            </label>
                             <div class="control-promo">
                                 <button onclick="ajustarCantidadPromo(${v.id}, -1)">-</button>
                                 <span>${cant}</span>
@@ -157,6 +207,10 @@ function renderDetallePromo() {
                     </label>
                 </div>
             ` : ''}
+            <div class="lista-quitar promo-aclaracion-box">
+                <label for="aclaracion-promo" class="detalle-section-title">Aclaración</label>
+                <textarea id="aclaracion-promo" maxlength="180" placeholder="Ej: sin cebolla, sin salsa, una sin tomate..." oninput="actualizarAclaracionPromo(this.value)">${aclaracionPromoDetalle}</textarea>
+            </div>
         </div>`;
 
     actualizarFooterDetalle();
@@ -202,6 +256,10 @@ function toggleExtraPromo(extraId, checked) {
     actualizarFooterDetalle();
 }
 
+function actualizarAclaracionPromo(valor) {
+    aclaracionPromoDetalle = valor;
+}
+
 function abrirDetalle(id) {
     productoSeleccionado = productos.find(p => p.id === id);
     if (!productoSeleccionado) return;
@@ -209,12 +267,14 @@ function abrirDetalle(id) {
     const cont = document.getElementById('contenido-detalle');
     if (cont) {
         cont.innerHTML = `
-            <img src="${productoSeleccionado.foto}" onerror="this.src='Logo.jpg'">
+            <div class="detalle-hero">
+                <img src="${productoSeleccionado.foto}" onerror="this.src='src/Logo.jpg'">
+            </div>
             <div class="info-detalle">
                 <h2>${productoSeleccionado.nombre}</h2>
-                <p style="color: #666; font-size: 0.9rem;">${productoSeleccionado.desc}</p>
+                <p>${productoSeleccionado.desc}</p>
                 <div class="lista-quitar">
-                    <p style="font-weight: bold; margin-bottom: 10px; font-size: 0.85rem; color: #333;">¿QUITAR INGREDIENTES?</p>
+                    <p class="detalle-section-title">Personalizá tu burger</p>
                     ${productoSeleccionado.ingredientes.map(ing => `
                         <div class="item-check" onclick="toggleCheckbox(this)">
                             <label><span class="prefix">Sin</span><span class="nombre-ing">${ing}</span></label>

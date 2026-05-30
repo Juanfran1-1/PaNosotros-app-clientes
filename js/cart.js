@@ -31,8 +31,9 @@ function agregarAlCarritoDesdeDetalle() {
     
     // Agregamos el ID a la búsqueda para no duplicar items iguales
     const itemExistente = carrito.find(item => 
-        item.id === productoSeleccionado.id && // <--- CAMBIO AQUÍ
-        JSON.stringify(item.quitados.sort()) === JSON.stringify(quitados.sort())
+        item.tipo_item === 'hamburguesa' &&
+        item.id === productoSeleccionado.id &&
+        JSON.stringify([...(item.quitados || [])].sort()) === JSON.stringify([...quitados].sort())
     );
 
     if (itemExistente) {
@@ -78,15 +79,19 @@ function agregarPromoAlCarritoDesdeDetalle() {
         precio: Number(extraPromoSeleccionado.precio),
         cantidad: 1
     }] : [];
+    const aclaracionPromo = (document.getElementById('aclaracion-promo')?.value || aclaracionPromoDetalle || '').trim();
 
     const detalleLineas = variedadesElegidas.map(v => `${v.cantidad} ${v.nombre}`);
     if ((promo.nombre || '').toUpperCase().includes('GORDITXS') && !(promo.nombre || '').toUpperCase().includes('LIGHT')) {
         detalleLineas.push('Incluye papas noisette');
     }
     extrasItem.forEach(extra => detalleLineas.push(`+ ${extra.nombre}`));
+    if (aclaracionPromo) {
+        detalleLineas.push(`Aclaración: ${aclaracionPromo}`);
+    }
 
     const precioFinal = Number(promo.precio) + extrasItem.reduce((acc, extra) => acc + (extra.precio * extra.cantidad), 0);
-    const firma = JSON.stringify({ promo_id: promo.id, variedades: variedadesElegidas, extras: extrasItem });
+    const firma = JSON.stringify({ promo_id: promo.id, variedades: variedadesElegidas, extras: extrasItem, aclaracion: aclaracionPromo });
 
     const itemExistente = carrito.find(item => item.tipo_item === 'promo' && item.firma === firma);
     if (itemExistente) {
@@ -96,11 +101,12 @@ function agregarPromoAlCarritoDesdeDetalle() {
             id: promo.id,
             tipo_item: 'promo',
             nombre: promo.nombre,
-            detalle_snapshot: `${promo.nombre} - ${detalleLineas.join(' | ')}`,
+            nombre_snapshot: `${promo.nombre} - ${detalleLineas.join(' | ')}`,
             precio: precioFinal,
             cantidad: cantidadEnDetalle,
             variedades: variedadesElegidas,
             extras: extrasItem,
+            aclaracion: aclaracionPromo,
             detalleLineas,
             firma
         });
@@ -135,40 +141,58 @@ function actualizarResumenCheckout() {
     const selectorEntrega = document.getElementById('metodo-entrega');
     const metodoEntrega = selectorEntrega ? selectorEntrega.value : "Delivery";
     
-    contenedor.innerHTML = "<strong style='color:#333;'>Tu Pedido:</strong><br><br>";
+    contenedor.innerHTML = `
+        <div class="checkout-summary-head">
+            <span>Cantidad</span>
+            <strong>${carrito.reduce((acc, item) => acc + item.cantidad, 0)}</strong>
+        </div>
+    `;
     
     // Calculamos subtotal base
     let subtotalProductos = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
     
     carrito.forEach((item, index) => {
-        let detalleQuitados = item.quitados && item.quitados.length > 0 
-            ? `<br><small style="color: #d35400;">SIN: ${item.quitados.join(', ')}</small>` 
+        let detalleQuitados = item.quitados && item.quitados.length > 0
+            ? `<small>SIN: ${item.quitados.join(', ')}</small>`
             : "";
         if (item.detalleLineas && item.detalleLineas.length > 0) {
-            detalleQuitados += `<br><small style="color: #d35400;">${item.detalleLineas.join(' | ')}</small>`;
+            detalleQuitados += `<small>${item.detalleLineas.join(' | ')}</small>`;
         }
 
         contenedor.innerHTML += `
-            <div style="background: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #eee; text-align: left; position: relative; color: #333;">
-                <button onclick="eliminarDelCarrito(${index})" style="position:absolute; right:10px; top:10px; border:none; background:none; color:gray; font-size:1.2rem;">✕</button>
-                <strong>${item.cantidad}x ${item.nombre}</strong> - $${item.precio * item.cantidad}
-                ${detalleQuitados}
-                <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
-                    <button onclick="cambiarCantidadCarrito(${index}, -1)" style="width:25px; height:25px; border-radius:50%; border:none; background:#eee;">-</button>
+            <div class="checkout-item">
+                <button class="checkout-remove" onclick="eliminarDelCarrito(${index})" aria-label="Eliminar ${item.nombre}">✕</button>
+                <div class="checkout-item-main">
+                    <strong>${item.nombre}</strong>
+                    ${detalleQuitados ? `<div class="checkout-item-detail">${detalleQuitados}</div>` : ''}
+                </div>
+                <div class="checkout-item-side">
+                    <span>$${item.precio * item.cantidad}</span>
+                    <div class="checkout-qty">
+                        <button onclick="cambiarCantidadCarrito(${index}, -1)">-</button>
                     <span>${item.cantidad}</span>
-                    <button onclick="cambiarCantidadCarrito(${index}, 1)" style="width:25px; height:25px; border-radius:50%; border:none; background:#eee;">+</button>
+                        <button onclick="cambiarCantidadCarrito(${index}, 1)">+</button>
+                    </div>
                 </div>
             </div>`;
     });
 
-    let totalCalculado = subtotalProductos;
-    if (metodoEntrega === "Delivery") {
-        totalCalculado += COSTO_ENVIO;
-        contenedor.innerHTML += `<p style="text-align:right; color:#666;">Envío: $${COSTO_ENVIO}</p>`;
-    }
-
+    const totalCalculado = metodoEntrega === "Delivery"
+        ? subtotalProductos + COSTO_ENVIO
+        : subtotalProductos;
+    const estaEnPasoPedido = document.getElementById('checkout-step-pedido')?.style.display !== 'none';
     total = totalCalculado; // Actualizamos la variable global
-    contenedor.innerHTML += `<h3 style="color:#333; text-align:right; margin-top:10px;">TOTAL: $${total}</h3>`;
+    contenedor.innerHTML += `
+        <div class="checkout-totals">
+            ${estaEnPasoPedido ? `
+                <h3><span>Subtotal</span><strong>$${subtotalProductos}</strong></h3>
+            ` : `
+                <p><span>Subtotal</span><strong>$${subtotalProductos}</strong></p>
+                ${metodoEntrega === "Delivery" ? `<p><span>Envío</span><strong>$${COSTO_ENVIO}</strong></p>` : ''}
+                <h3><span>Total</span><strong>$${total}</strong></h3>
+            `}
+        </div>
+    `;
 }
 
 // ESTA FUNCIÓN ES LA QUE HACE QUE LOS BOTONES FUNCIONEN
