@@ -1,5 +1,6 @@
 #inicio {
     min-height: 100vh;
+    min-height: 100dvh;
     padding: 30px 24px 22px;
     display: flex;
     flex-direction: column;

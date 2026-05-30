@@ -356,6 +356,7 @@
     width: 100%;
     max-width: 430px;
     min-height: 100vh;
+    min-height: 100dvh;
     margin: 0 auto;
     overflow: hidden;
     color: #fff;
@@ -384,6 +385,7 @@
     position: relative;
     z-index: 1;
     min-height: 100vh;
+    min-height: 100dvh;
     padding: 78px 22px 30px;
     display: flex;
     flex-direction: column;
