@@ -26,8 +26,22 @@ html {
     scrollbar-width: none;
 }
 
+html,
+body {
+    touch-action: manipulation;
+}
+
+button,
+a {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
 body {
     min-height: 100vh;
+    min-height: 100dvh;
     background:
         radial-gradient(circle at 50% 0%, rgba(255, 204, 0, 0.12), transparent 34%),
         #000;
@@ -62,6 +76,7 @@ section {
     width: 100%;
     max-width: 430px;
     min-height: 100vh;
+    min-height: 100dvh;
     padding: 20px;
     position: relative;
     text-align: center;
@@ -113,7 +128,8 @@ select option {
     }
 
     section {
-        min-height: calc(100vh - 40px);
+        min-height: 100vh;
+        min-height: 100dvh;
         border-radius: 24px;
         overflow: hidden;
     }

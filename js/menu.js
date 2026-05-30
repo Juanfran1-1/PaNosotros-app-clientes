@@ -21,10 +21,7 @@ function cargarMenu() {
     const localCerrado = !configTienda.abierto ;
     const mostrarPromos = filtroMenu === 'todas' || filtroMenu === 'promos';
     const mostrarMinis = filtroMenu === 'todas' || filtroMenu === 'minis';
-    const comboNote = document.getElementById('menu-combo-note');
-    if (comboNote) {
-        comboNote.style.display = filtroMenu === 'promos' ? 'none' : '';
-    }
+    const promosVisibles = promos.filter(promoTieneVariedadesDisponibles);
 
     contenedor.innerHTML += `
         <p class="menu-subtitle">Elegí tus favoritos</p>
@@ -35,10 +32,10 @@ function cargarMenu() {
         </div>
     `;
 
-    if (mostrarPromos && promos.length > 0) {
+    if (mostrarPromos && promosVisibles.length > 0) {
         contenedor.innerHTML += `
             <h3 class="titulo-promos">Promos destacadas</h3>
-            ${promos.map(promo => {
+            ${promosVisibles.map(promo => {
                 const accionPromo = localCerrado
                     ? "mostrarMensaje('El local está cerrado.', 3000)"
                     : `abrirDetallePromo(${promo.id})`;
@@ -61,6 +58,13 @@ function cargarMenu() {
     if (mostrarMinis) {
         contenedor.innerHTML += `
             <h3 class="titulo-promos">${filtroMenu === 'minis' ? 'Mini burgers' : 'MINIS'}</h3>
+        `;
+        contenedor.innerHTML += `
+            <div id="menu-combo-note" class="menu-combo-note">
+                <p>
+                    Cada combo contiene 5 mini burgers con papas noisette
+                </p>
+            </div>
         `;
 
         productos.forEach(p => {
@@ -96,7 +100,7 @@ function cargarMenu() {
         });
     }
 
-    if (filtroMenu === 'promos' && promos.length === 0) {
+    if (filtroMenu === 'promos' && promosVisibles.length === 0) {
         contenedor.innerHTML += `
             <div class="menu-empty">
                 <h3>No hay promos activas</h3>
@@ -139,8 +143,12 @@ function getPromoConfig(promo) {
 }
 
 function getVariedadesPromo(promo) {
-    const idsPermitidos = (promo.promo_items || []).map(item => item.hamburguesa_id);
-    return productos.filter(p => p.disponible !== false && idsPermitidos.includes(p.id));
+    const idsPermitidos = (promo.promo_items || []).map(item => String(item.hamburguesa_id));
+    return productos.filter(p => p.disponible !== false && idsPermitidos.includes(String(p.id)));
+}
+
+function promoTieneVariedadesDisponibles(promo) {
+    return getVariedadesPromo(promo).length > 0;
 }
 
 function totalPromoSeleccionado() {

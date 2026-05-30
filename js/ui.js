@@ -129,7 +129,11 @@ function renderHomePromos() {
         homePromoTimer = null;
     }
 
-    const promosDisponibles = (promos || []).filter(promo => promo.disponible !== false);
+    const promosDisponibles = (promos || []).filter(promo => {
+        const tieneVariedades = typeof promoTieneVariedadesDisponibles !== 'function'
+            || promoTieneVariedadesDisponibles(promo);
+        return promo.disponible !== false && tieneVariedades;
+    });
     if (promosDisponibles.length === 0) {
         contenedor.innerHTML = "";
         contenedor.style.display = "none";
