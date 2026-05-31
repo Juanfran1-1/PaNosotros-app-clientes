@@ -18,10 +18,15 @@ let cantidadesPromo = {};
 let extraPromoSeleccionado = null;
 let aclaracionPromoDetalle = '';
 let whatsappPedidoUrl = '';
+let realtimeMenuChannel = null;
+let menuRefreshTimer = null;
+let menuPollingTimer = null;
+let ultimoSnapshotMenu = '';
 
 let configTienda = {
     whatsapp: "",
     alias_mp: "",
     abierto: true,
     promo_titulo: "",
+    direccion_local: "",
 };

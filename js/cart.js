@@ -14,8 +14,9 @@ function actualizarFooterDetalle() {
     const subElem = document.getElementById('subtotal-detalle');
     if (cantElem) cantElem.innerText = cantidadEnDetalle;
     if (subElem) {
-        const precioExtra = productoSeleccionado && productoSeleccionado.tipo_item === 'promo' && extraPromoSeleccionado
-            ? Number(extraPromoSeleccionado.precio)
+        const extrasSeleccionados = Array.isArray(extraPromoSeleccionado) ? extraPromoSeleccionado : (extraPromoSeleccionado ? [extraPromoSeleccionado] : []);
+        const precioExtra = productoSeleccionado && productoSeleccionado.tipo_item === 'promo'
+            ? extrasSeleccionados.reduce((acc, extra) => acc + Number(extra.precio || 0), 0)
             : 0;
         subElem.innerText = ((Number(productoSeleccionado.precio) + precioExtra) * cantidadEnDetalle);
     }
@@ -73,12 +74,13 @@ function agregarPromoAlCarritoDesdeDetalle() {
         };
     }).filter(v => v.cantidad > 0);
 
-    const extrasItem = extraPromoSeleccionado ? [{
-        id: extraPromoSeleccionado.id,
-        nombre: extraPromoSeleccionado.nombre,
-        precio: Number(extraPromoSeleccionado.precio),
+    const extrasSeleccionados = Array.isArray(extraPromoSeleccionado) ? extraPromoSeleccionado : (extraPromoSeleccionado ? [extraPromoSeleccionado] : []);
+    const extrasItem = extrasSeleccionados.map(extra => ({
+        id: extra.id,
+        nombre: extra.nombre,
+        precio: Number(extra.precio),
         cantidad: 1
-    }] : [];
+    }));
     const aclaracionPromo = (document.getElementById('aclaracion-promo')?.value || aclaracionPromoDetalle || '').trim();
 
     const detalleLineas = variedadesElegidas.map(v => `${v.cantidad} ${v.nombre}`);

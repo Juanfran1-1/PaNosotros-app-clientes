@@ -141,6 +141,10 @@ function normalizarFotoProducto(foto) {
     if (!foto) return 'src/Logo.jpg';
 
     const nombreFoto = foto.trim();
+    if (/^https?:\/\//i.test(nombreFoto)) {
+        return nombreFoto;
+    }
+
     if (nombreFoto.toLowerCase() === 'parri-llera.png') {
         return 'src/Parri-Llera.webp';
     }
@@ -160,6 +164,10 @@ function normalizarFotoPromo(foto, nombre) {
     const nombrePromo = (nombre || '').toUpperCase();
     const nombreFoto = foto ? foto.trim() : '';
 
+    if (/^https?:\/\//i.test(nombreFoto)) {
+        return nombreFoto;
+    }
+
     if (nombrePromo.includes('GORDITXS LIGHT')) {
         return 'src/PROMO GORDITXS LIGHT.webp';
     }
@@ -168,7 +176,18 @@ function normalizarFotoPromo(foto, nombre) {
         return 'src/PROMO GORDITXS.webp';
     }
 
-    return nombreFoto ? `src/${nombreFoto}` : 'src/Fondo.jpg';
+    return nombreFoto ? `src/${nombreFoto}` : 'src/Logo.jpg';
+}
+
+function normalizarFotoExtra(foto) {
+    if (!foto) return 'src/Logo.jpg';
+
+    const nombreFoto = foto.trim();
+    if (/^https?:\/\//i.test(nombreFoto)) {
+        return nombreFoto;
+    }
+
+    return `src/${nombreFoto}`;
 }
 
 async function cargarPromosDesdeBD() {
@@ -187,22 +206,183 @@ async function cargarPromosDesdeBD() {
 
         if (errorPromos) throw errorPromos;
 
-        promos = (promosData || []).map(promo => ({
-            ...promo,
-            foto: normalizarFotoPromo(promo.foto, promo.nombre),
-            promo_items: promo.promo_items || []
-        }));
-
         const { data: extrasData, error: errorExtras } = await _supabase
             .from('extras')
             .select('*')
             .eq('disponible', true);
 
         if (errorExtras) throw errorExtras;
-        extras = extrasData || [];
+        extras = (extrasData || []).map(extra => ({
+            ...extra,
+            foto: normalizarFotoExtra(extra.foto)
+        }));
+
+        let promoExtras = [];
+        try {
+            const { data: promoExtrasData, error: errorPromoExtras } = await _supabase
+                .from('promo_extras')
+                .select('*');
+
+            if (errorPromoExtras) throw errorPromoExtras;
+            promoExtras = promoExtrasData || [];
+        } catch (promoExtrasErr) {
+            console.warn("No se pudieron cargar extras por promo:", promoExtrasErr);
+        }
+
+        promos = (promosData || []).map(promo => {
+            const relacionesExtras = promoExtras.filter(item => String(item.promo_id) === String(promo.id));
+            const extrasPermitidos = relacionesExtras
+                .map(item => extras.find(extra => String(extra.id) === String(item.extra_id)))
+                .filter(Boolean);
+
+            return {
+                ...promo,
+                foto: normalizarFotoPromo(promo.foto, promo.nombre),
+                promo_items: promo.promo_items || [],
+                promo_extras: relacionesExtras,
+                extras_permitidos: extrasPermitidos
+            };
+        });
     } catch (err) {
         console.error("Error cargando promos:", err);
         promos = [];
         extras = [];
     }
+}
+
+function pantallaVisible(idPantalla) {
+    const pantalla = document.getElementById(idPantalla);
+    return pantalla && pantalla.style.display !== 'none';
+}
+
+function crearSnapshotMenu() {
+    return JSON.stringify({
+        productos: productos.map(p => ({
+            id: p.id,
+            disponible: p.disponible,
+            stock_actual: p.stock_actual,
+            precio: p.precio,
+            foto: p.foto
+        })),
+        promos: promos.map(p => ({
+            id: p.id,
+            disponible: p.disponible,
+            precio: p.precio,
+            foto: p.foto,
+            descripcion: p.descripcion,
+            permite_variedades: p.permite_variedades,
+            max_variedades: p.max_variedades,
+            promo_items: (p.promo_items || []).map(item => ({
+                hamburguesa_id: item.hamburguesa_id,
+                cantidad: item.cantidad
+            })),
+            promo_extras: (p.promo_extras || []).map(item => ({
+                promo_id: item.promo_id,
+                extra_id: item.extra_id
+            }))
+        })),
+        extras: extras.map(e => ({
+            id: e.id,
+            disponible: e.disponible,
+            precio: e.precio
+        })),
+        configuracion: {
+            abierto: configTienda.abierto,
+            COSTO_ENVIO,
+            promo_titulo: configTienda.promo_titulo
+        }
+    });
+}
+
+async function refrescarMenuDesdeBD({ forzarRender = true } = {}) {
+    await cargarConfiguracion();
+    await cargarProductosDesdeBD();
+    await cargarPromosDesdeBD();
+
+    const nuevoSnapshot = crearSnapshotMenu();
+    const cambio = nuevoSnapshot !== ultimoSnapshotMenu;
+    ultimoSnapshotMenu = nuevoSnapshot;
+
+    if (!forzarRender && !cambio) return false;
+
+    if (pantallaVisible('menu')) {
+        cargarMenu();
+    }
+
+    if (pantallaVisible('inicio') && typeof renderHomePromos === 'function') {
+        renderHomePromos();
+    }
+
+    if (pantallaVisible('detalle-producto') && productoSeleccionado?.tipo_item === 'promo') {
+        productoSeleccionado = promos.find(promo => String(promo.id) === String(productoSeleccionado.id));
+        if (productoSeleccionado) {
+            productoSeleccionado.tipo_item = 'promo';
+            renderDetallePromo();
+        } else {
+            mostrarPantalla('menu');
+        }
+    }
+
+    if (typeof actualizarBarra === 'function') {
+        actualizarBarra();
+    }
+
+    return cambio;
+}
+
+function programarRefreshMenuRealtime(payload) {
+    if (payload) {
+        console.log("Realtime menú recibió cambio:", payload.table, payload.eventType);
+    }
+
+    clearTimeout(menuRefreshTimer);
+    menuRefreshTimer = setTimeout(async () => {
+        try {
+            await refrescarMenuDesdeBD({ forzarRender: true });
+        } catch (err) {
+            console.error("Error actualizando menú en tiempo real:", err);
+        }
+    }, 350);
+}
+
+function iniciarRealtimeMenu() {
+    if (realtimeMenuChannel) return;
+
+    realtimeMenuChannel = _supabase
+        .channel('menu-public-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'hamburguesas' }, programarRefreshMenuRealtime)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'promos' }, programarRefreshMenuRealtime)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'promo_items' }, programarRefreshMenuRealtime)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'promo_extras' }, programarRefreshMenuRealtime)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'extras' }, programarRefreshMenuRealtime)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'configuracion' }, programarRefreshMenuRealtime)
+        .subscribe((status) => {
+            console.log("Estado Realtime menú:", status);
+            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+                console.warn("Realtime menú desconectado:", status);
+                realtimeMenuChannel = null;
+            }
+        });
+}
+
+function iniciarPollingMenu() {
+    if (menuPollingTimer) return;
+
+    menuPollingTimer = setInterval(async () => {
+        const necesitaPolling =
+            pantallaVisible('menu') ||
+            pantallaVisible('inicio') ||
+            pantallaVisible('detalle-producto');
+
+        if (!necesitaPolling) return;
+
+        try {
+            const cambio = await refrescarMenuDesdeBD({ forzarRender: false });
+            if (cambio) {
+                console.log("Menú actualizado por polling");
+            }
+        } catch (err) {
+            console.error("Error en polling del menú:", err);
+        }
+    }, 5000);
 }
