@@ -314,12 +314,21 @@
     z-index: 0;
     width: 100%;
     max-width: 430px;
-    height: 100%;
+    height: 100vh;
+    height: 100dvh;
     object-fit: cover;
     opacity: 0.12;
     filter: saturate(1.2) contrast(1.1);
     transform: translateX(-50%);
     pointer-events: none;
+}
+
+.video-fondo::-webkit-media-controls,
+.video-fondo::-webkit-media-controls-panel,
+.video-fondo::-webkit-media-controls-play-button,
+.video-fondo::-webkit-media-controls-start-playback-button {
+    display: none !important;
+    opacity: 0 !important;
 }
 
 @keyframes spin {

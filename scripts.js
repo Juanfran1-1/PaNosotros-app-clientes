@@ -1,5 +1,15 @@
 ﻿// Inicializador principal. Las funciones viven en js/*.js para facilitar mantenimiento.
 document.addEventListener("DOMContentLoaded", async () => {
+    document.querySelectorAll(".video-fondo").forEach(video => {
+        video.muted = true;
+        video.playsInline = true;
+        video.setAttribute("muted", "");
+        video.setAttribute("playsinline", "");
+        video.setAttribute("webkit-playsinline", "");
+
+        video.play().catch(() => {});
+    });
+
     await cargarConfiguracion();
     await cargarProductosDesdeBD();
     await cargarPromosDesdeBD();
