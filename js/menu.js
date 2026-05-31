@@ -42,7 +42,7 @@ function cargarMenu() {
 
                 return `
                     <div class="card card-promo menu-card" onclick="${accionPromo}">
-                        <img src="${promo.foto}" class="img-producto" onerror="this.src='src/Fondo.jpg'">
+                        <img src="${promo.foto}" class="img-producto" loading="eager" decoding="async" onerror="usarImagenFallback(this, 'src/fondominis.jpeg')">
                         <div class="info">
                             <span class="menu-card-tag">Promo</span>
                             <h3>${promo.nombre}</h3>
@@ -82,7 +82,7 @@ function cargarMenu() {
             contenedor.innerHTML += `
                 <div class="card menu-card ${estaAgotado ? 'agotado' : ''}" onclick="${accionClick}">
 
-                    <img src="${p.foto}" class="img-producto" onerror="this.src='src/Logo.jpg'"
+                    <img src="${p.foto}" class="img-producto" loading="eager" decoding="async" onerror="usarImagenFallback(this)"
                         style="${estaAgotado ? 'filter: grayscale(1); opacity: 0.5;' : ''}">
 
                     <div class="info">
@@ -182,7 +182,7 @@ function renderDetallePromo() {
 
     cont.innerHTML = `
         <div class="detalle-hero">
-            <img src="${promo.foto}" onerror="this.src='src/Fondo.jpg'">
+            <img src="${promo.foto}" loading="eager" decoding="async" onerror="usarImagenFallback(this, 'src/fondominis.jpeg')">
         </div>
         <div class="info-detalle">
             <h2>${promo.nombre}</h2>
@@ -224,7 +224,7 @@ function renderDetallePromo() {
                     <p class="detalle-section-title">Extras opcionales</p>
                     ${extrasPermitidos.map(extra => `
                         <label class="item-check item-extra-promo">
-                            <img class="extra-promo-img" src="${extra.foto || 'src/Logo.jpg'}" onerror="this.src='src/Logo.jpg'" alt="${extra.nombre}">
+                            <img class="extra-promo-img" src="${extra.foto || 'src/fondominis.jpeg'}" loading="lazy" decoding="async" onerror="usarImagenFallback(this)" alt="${extra.nombre}">
                             <span class="extra-promo-info">
                                 <span class="prefix">Extra</span>
                                 <span class="nombre-ing">${extra.nombre}</span>
@@ -307,7 +307,7 @@ function abrirDetalle(id) {
     if (cont) {
         cont.innerHTML = `
             <div class="detalle-hero">
-                <img src="${productoSeleccionado.foto}" onerror="this.src='src/Logo.jpg'">
+                <img src="${productoSeleccionado.foto}" loading="eager" decoding="async" onerror="usarImagenFallback(this)">
             </div>
             <div class="info-detalle">
                 <h2>${productoSeleccionado.nombre}</h2>

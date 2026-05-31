@@ -118,6 +118,11 @@ function guardarCarritoEnLocalStorage() {
     localStorage.setItem('carrito_panosotros', JSON.stringify(carrito));
 }
 
+function usarImagenFallback(img, fallback = 'src/fondominis.jpeg') {
+    img.onerror = null;
+    img.src = fallback;
+}
+
 let homePromoTimer = null;
 
 function renderHomePromos() {

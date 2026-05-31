@@ -138,9 +138,13 @@ async function cargarProductosDesdeBD() {
 }
 
 function normalizarFotoProducto(foto) {
-    if (!foto) return 'src/Logo.jpg';
+    if (!foto) return 'src/fondominis.jpeg';
 
     const nombreFoto = foto.trim();
+    if (!nombreFoto || nombreFoto.toLowerCase() === 'logo.jpg' || nombreFoto.toLowerCase() === 'src/logo.jpg') {
+        return 'src/fondominis.jpeg';
+    }
+
     if (/^https?:\/\//i.test(nombreFoto)) {
         return nombreFoto;
     }
@@ -176,13 +180,21 @@ function normalizarFotoPromo(foto, nombre) {
         return 'src/PROMO GORDITXS.webp';
     }
 
-    return nombreFoto ? `src/${nombreFoto}` : 'src/Logo.jpg';
+    if (!nombreFoto || nombreFoto.toLowerCase() === 'logo.jpg' || nombreFoto.toLowerCase() === 'src/logo.jpg') {
+        return 'src/fondominis.jpeg';
+    }
+
+    return nombreFoto ? `src/${nombreFoto}` : 'src/fondominis.jpeg';
 }
 
 function normalizarFotoExtra(foto) {
-    if (!foto) return 'src/Logo.jpg';
+    if (!foto) return 'src/fondominis.jpeg';
 
     const nombreFoto = foto.trim();
+    if (!nombreFoto || nombreFoto.toLowerCase() === 'logo.jpg' || nombreFoto.toLowerCase() === 'src/logo.jpg') {
+        return 'src/fondominis.jpeg';
+    }
+
     if (/^https?:\/\//i.test(nombreFoto)) {
         return nombreFoto;
     }
