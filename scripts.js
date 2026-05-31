@@ -9,8 +9,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         carrito = JSON.parse(carritoGuardado);
         actualizarBarra();
     }
+    ultimoSnapshotMenu = crearSnapshotMenu();
 
     renderHomePromos();
+    iniciarRealtimeMenu();
+    iniciarPollingMenu();
     mostrarPantalla("inicio");
     toggleDir();
 });

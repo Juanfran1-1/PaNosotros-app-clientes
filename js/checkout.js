@@ -94,6 +94,18 @@ async function enviarWhatsApp() {
 
         if (errorExtrasFresh) throw errorExtrasFresh;
 
+        let promoExtrasFresh = [];
+        try {
+            const { data: promoExtrasData, error: errorPromoExtrasFresh } = await _supabase
+                .from('promo_extras')
+                .select('promo_id, extra_id');
+
+            if (errorPromoExtrasFresh) throw errorPromoExtrasFresh;
+            promoExtrasFresh = promoExtrasData || [];
+        } catch (promoExtrasErr) {
+            console.warn("No se pudo validar promo_extras:", promoExtrasErr);
+        }
+
         // Verificamos cada item del carrito
         for (let item of carrito) {
             if (item.tipo_item === 'promo') {
@@ -116,6 +128,18 @@ async function enviarWhatsApp() {
                     if (!extraBD || extraBD.disponible === false) {
                         mostrarMensaje(`Lo sentimos, el extra "${extra.nombre}" ya no está disponible.`, 5000);
                         return;
+                    }
+
+                    if (promoExtrasFresh.length > 0) {
+                        const extraPermitido = promoExtrasFresh.some(relacion =>
+                            String(relacion.promo_id) === String(item.id) &&
+                            String(relacion.extra_id) === String(extra.id)
+                        );
+
+                        if (!extraPermitido) {
+                            mostrarMensaje(`El extra "${extra.nombre}" ya no está permitido en esta promo.`, 5000);
+                            return;
+                        }
                     }
                 }
                 continue;
@@ -208,7 +232,7 @@ async function enviarWhatsApp() {
         
         }
         if(entrega === "Retiro") {
-            msg += `Retirar por 119 e/81 y 82\n`;
+            msg += `Retirar por ${configTienda.direccion_local || '119 e/81 y 82'}\n`;
         
         }
         msg += `\n*TOTAL: $${total}*\n\n`;

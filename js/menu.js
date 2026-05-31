@@ -125,7 +125,7 @@ function abrirDetallePromo(id) {
     productoSeleccionado.tipo_item = 'promo';
     cantidadEnDetalle = 1;
     cantidadesPromo = {};
-    extraPromoSeleccionado = null;
+    extraPromoSeleccionado = [];
     aclaracionPromoDetalle = '';
     renderDetallePromo();
     mostrarPantalla('detalle-producto');
@@ -134,21 +134,35 @@ function abrirDetallePromo(id) {
 function getPromoConfig(promo) {
     const nombre = (promo.nombre || '').toUpperCase();
     const esLight = nombre.includes('LIGHT');
-    const cantidadTotal = esLight ? 5 : 3;
+    const cantidadesConfiguradas = (promo.promo_items || [])
+        .map(item => Number(item.cantidad || 0))
+        .filter(cantidad => cantidad > 0);
+    const cantidadTotal = cantidadesConfiguradas.length > 0
+        ? Math.max(...cantidadesConfiguradas)
+        : (esLight ? 5 : 3);
+    const maxVariedades = promo.permite_variedades
+        ? Math.max(2, Number(promo.max_variedades || 2))
+        : 1;
+
     return {
         cantidadTotal,
-        maxVariedades: esLight ? 2 : 1,
+        maxVariedades,
         permiteExtraPapas: esLight
     };
 }
 
 function getVariedadesPromo(promo) {
     const idsPermitidos = (promo.promo_items || []).map(item => String(item.hamburguesa_id));
-    return productos.filter(p => p.disponible !== false && idsPermitidos.includes(String(p.id)));
+    return productos.filter(p => idsPermitidos.includes(String(p.id)));
+}
+
+function getExtrasPermitidosPromo(promo) {
+    const extrasPermitidos = promo.extras_permitidos || [];
+    return extrasPermitidos;
 }
 
 function promoTieneVariedadesDisponibles(promo) {
-    return getVariedadesPromo(promo).length > 0;
+    return getVariedadesPromo(promo).some(p => p.disponible !== false);
 }
 
 function totalPromoSeleccionado() {
@@ -162,7 +176,8 @@ function renderDetallePromo() {
     const promo = productoSeleccionado;
     const config = getPromoConfig(promo);
     const variedades = getVariedadesPromo(promo);
-    const papas = extras.find(e => (e.nombre || '').toLowerCase().includes('papa'));
+    const extrasPermitidos = getExtrasPermitidosPromo(promo);
+    const extrasElegidos = Array.isArray(extraPromoSeleccionado) ? extraPromoSeleccionado : (extraPromoSeleccionado ? [extraPromoSeleccionado] : []);
     const totalElegido = totalPromoSeleccionado();
 
     cont.innerHTML = `
@@ -174,45 +189,50 @@ function renderDetallePromo() {
             <p>${promo.descripcion || ''}</p>
             <div class="lista-quitar">
                 <p class="detalle-section-title">
-                    Elegí ${config.cantidadTotal} mini burgers ${config.maxVariedades === 1 ? 'del mismo tipo' : 'combinando hasta 2 variedades'}
+                    Elegí ${config.cantidadTotal} mini burgers ${config.maxVariedades === 1 ? 'del mismo tipo' : `combinando hasta ${config.maxVariedades} variedades`}
                 </p>
                 <p class="contador-promo">${totalElegido}/${config.cantidadTotal} seleccionadas</p>
                 ${variedades.map(v => {
                     const cant = cantidadesPromo[v.id] || 0;
                     if (config.maxVariedades === 1) {
                         return `
-                            <div class="item-check item-promo" onclick="seleccionarVariedadUnicaPromo(${v.id})">
+                            <div class="item-check item-promo ${v.disponible === false ? 'promo-agotada' : ''}" ${v.disponible === false ? '' : `onclick="seleccionarVariedadUnicaPromo(${v.id})"`}>
                                 <label>
                                     <span class="nombre-ing">${v.nombre}</span>
                                     <span class="desc-variedad-promo">${v.desc || ''}</span>
                                 </label>
-                                <span class="cantidad-promo">${cant ? config.cantidadTotal : '+'}</span>
+                                <span class="cantidad-promo">${v.disponible === false ? '-' : (cant ? config.cantidadTotal : '+')}</span>
                             </div>`;
                     }
 
                     return `
-                        <div class="item-check item-promo">
+                        <div class="item-check item-promo ${v.disponible === false ? 'promo-agotada' : ''}">
                             <label>
                                 <span class="nombre-ing">${v.nombre}</span>
                                 <span class="desc-variedad-promo">${v.desc || ''}</span>
                             </label>
                             <div class="control-promo">
-                                <button onclick="ajustarCantidadPromo(${v.id}, -1)">-</button>
+                                <button ${v.disponible === false ? 'disabled' : ''} onclick="ajustarCantidadPromo(${v.id}, -1)">-</button>
                                 <span>${cant}</span>
-                                <button onclick="ajustarCantidadPromo(${v.id}, 1)">+</button>
+                                <button ${v.disponible === false ? 'disabled' : ''} onclick="ajustarCantidadPromo(${v.id}, 1)">+</button>
                             </div>
                         </div>`;
                 }).join('')}
             </div>
-            ${config.permiteExtraPapas && papas ? `
+            ${extrasPermitidos.length > 0 ? `
                 <div class="lista-quitar extra-promo-box">
-                    <label class="item-check">
-                        <span>
-                            <span class="prefix">Extra</span>
-                            <span class="nombre-ing">${papas.nombre} (+$${papas.precio})</span>
-                        </span>
-                        <input type="checkbox" ${extraPromoSeleccionado ? 'checked' : ''} onchange="toggleExtraPromo(${papas.id}, this.checked)">
-                    </label>
+                    <p class="detalle-section-title">Extras opcionales</p>
+                    ${extrasPermitidos.map(extra => `
+                        <label class="item-check item-extra-promo">
+                            <img class="extra-promo-img" src="${extra.foto || 'src/Logo.jpg'}" onerror="this.src='src/Logo.jpg'" alt="${extra.nombre}">
+                            <span class="extra-promo-info">
+                                <span class="prefix">Extra</span>
+                                <span class="nombre-ing">${extra.nombre}</span>
+                                <span class="desc-variedad-promo">+$${extra.precio}</span>
+                            </span>
+                            <input type="checkbox" ${extrasElegidos.some(e => String(e.id) === String(extra.id)) ? 'checked' : ''} onchange="toggleExtraPromo(${extra.id}, this.checked)">
+                        </label>
+                    `).join('')}
                 </div>
             ` : ''}
             <div class="lista-quitar promo-aclaracion-box">
@@ -259,8 +279,19 @@ function ajustarCantidadPromo(id, delta) {
 }
 
 function toggleExtraPromo(extraId, checked) {
-    const extra = extras.find(e => e.id === extraId);
-    extraPromoSeleccionado = checked && extra ? extra : null;
+    const extra = getExtrasPermitidosPromo(productoSeleccionado).find(e => String(e.id) === String(extraId));
+    const seleccionados = Array.isArray(extraPromoSeleccionado) ? [...extraPromoSeleccionado] : (extraPromoSeleccionado ? [extraPromoSeleccionado] : []);
+
+    if (checked && extra && !seleccionados.some(e => String(e.id) === String(extra.id))) {
+        seleccionados.push(extra);
+    }
+
+    if (!checked) {
+        extraPromoSeleccionado = seleccionados.filter(e => String(e.id) !== String(extraId));
+    } else {
+        extraPromoSeleccionado = seleccionados;
+    }
+
     actualizarFooterDetalle();
 }
 
