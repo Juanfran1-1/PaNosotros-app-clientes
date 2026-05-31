@@ -384,5 +384,5 @@ function iniciarPollingMenu() {
         } catch (err) {
             console.error("Error en polling del menú:", err);
         }
-    }, 5000);
+    }, 600000);
 }
