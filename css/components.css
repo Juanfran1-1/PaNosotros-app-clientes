@@ -321,20 +321,14 @@
     filter: saturate(1.2) contrast(1.1);
     transform: translateX(-50%);
     pointer-events: none;
-    background: transparent;
-    -webkit-user-select: none;
-    user-select: none;
 }
 
 .video-fondo::-webkit-media-controls,
 .video-fondo::-webkit-media-controls-panel,
 .video-fondo::-webkit-media-controls-play-button,
-.video-fondo::-webkit-media-controls-start-playback-button,
-.video-fondo::-webkit-media-controls-overlay-play-button,
-.video-fondo::-webkit-media-controls-enclosure {
+.video-fondo::-webkit-media-controls-start-playback-button {
     display: none !important;
     opacity: 0 !important;
-    visibility: hidden !important;
 }
 
 @keyframes spin {
