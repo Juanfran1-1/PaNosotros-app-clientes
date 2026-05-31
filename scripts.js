@@ -3,9 +3,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelectorAll(".video-fondo").forEach(video => {
         video.muted = true;
         video.playsInline = true;
+        video.controls = false;
         video.setAttribute("muted", "");
         video.setAttribute("playsinline", "");
         video.setAttribute("webkit-playsinline", "");
+        video.setAttribute("preload", "auto");
+        video.removeAttribute("controls");
+        video.removeAttribute("poster");
 
         video.play().catch(() => {});
     });
