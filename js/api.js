@@ -4,8 +4,29 @@ async function cargarConfiguracion() {
         const { data, error } = await _supabase.from('configuracion').select('*').single();
         if (error) throw error;
         if (data) {
+            const estadoPrevioLocal = estadoLocalAnterior;
             configTienda = data;
             COSTO_ENVIO = data.COSTO_ENVIO || 0;
+            const estaRealmenteAbierto = configTienda.abierto;
+
+            if (estadoPrevioLocal !== null && estadoPrevioLocal !== estaRealmenteAbierto) {
+                if (estaRealmenteAbierto) {
+                    mostrarMensaje("Local abierto", 3500);
+                } else {
+                    carrito = [];
+                    total = 0;
+                    localStorage.removeItem('carrito_panosotros');
+                    if (typeof actualizarBarra === 'function') actualizarBarra();
+                    if (typeof actualizarResumenCheckout === 'function') actualizarResumenCheckout();
+                    mostrarMensaje("Local cerrado.", 4500);
+
+                    if (pantallaVisible('checkout') || pantallaVisible('detalle-producto')) {
+                        mostrarPantalla('menu');
+                    }
+                }
+            }
+            estadoLocalAnterior = estaRealmenteAbierto;
+
             if (document.getElementById('checkout').style.display === 'flex') {
                 actualizarResumenCheckout();
             }
@@ -19,8 +40,6 @@ async function cargarConfiguracion() {
             
             const btnPedido = document.getElementById('btn-comenzar');
             const statusLocal = document.getElementById('status-local');
-            
-            const estaRealmenteAbierto = configTienda.abierto ;
 
             if (!estaRealmenteAbierto) {
                 // CAMBIO: En lugar de deshabilitar, permitimos entrar pero cambiamos el texto
@@ -359,22 +378,41 @@ function programarRefreshMenuRealtime(payload) {
 
 function iniciarRealtimeMenu() {
     if (realtimeMenuChannel) return;
+    clearTimeout(realtimeReconnectTimer);
 
-    realtimeMenuChannel = _supabase
-        .channel('menu-public-realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'hamburguesas' }, programarRefreshMenuRealtime)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'promos' }, programarRefreshMenuRealtime)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'promo_items' }, programarRefreshMenuRealtime)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'promo_extras' }, programarRefreshMenuRealtime)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'extras' }, programarRefreshMenuRealtime)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'configuracion' }, programarRefreshMenuRealtime)
-        .subscribe((status) => {
-            console.log("Estado Realtime menú:", status);
-            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-                console.warn("Realtime menú desconectado:", status);
-                realtimeMenuChannel = null;
-            }
-        });
+    const tablasRealtime = [
+        'hamburguesas',
+        'promos',
+        'promo_items',
+        'promo_extras',
+        'extras',
+        'configuracion'
+    ];
+
+    realtimeMenuChannel = tablasRealtime.map(tabla => {
+        return _supabase
+            .channel(`menu-realtime-${tabla}`)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: tabla },
+                programarRefreshMenuRealtime
+            )
+            .subscribe((status) => {
+                console.log(`Estado Realtime ${tabla}:`, status);
+
+                if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+                    console.warn(`Realtime ${tabla} desconectado:`, status);
+                    realtimeMenuChannel = null;
+                    clearTimeout(realtimeReconnectTimer);
+                    realtimeReconnectTimer = setTimeout(() => {
+                        console.log("Reintentando Realtime menú...");
+                        iniciarRealtimeMenu();
+                    }, 3000);
+                }
+            });
+    });
+
+    console.log("Realtime menú escuchando tablas:", tablasRealtime.join(', '));
 }
 
 function iniciarPollingMenu() {
@@ -396,5 +434,5 @@ function iniciarPollingMenu() {
         } catch (err) {
             console.error("Error en polling del menú:", err);
         }
-    }, 600000);
+    }, 10000);
 }

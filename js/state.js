@@ -18,10 +18,13 @@ let cantidadesPromo = {};
 let extraPromoSeleccionado = null;
 let aclaracionPromoDetalle = '';
 let whatsappPedidoUrl = '';
+let pedidoEnProceso = false;
 let realtimeMenuChannel = null;
 let menuRefreshTimer = null;
 let menuPollingTimer = null;
+let realtimeReconnectTimer = null;
 let ultimoSnapshotMenu = '';
+let estadoLocalAnterior = null;
 
 let configTienda = {
     whatsapp: "",

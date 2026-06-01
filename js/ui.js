@@ -172,6 +172,6 @@ function renderHomePromos() {
         homePromoTimer = setInterval(() => {
             indiceActivo = (indiceActivo + 1) % promosDisponibles.length;
             pintarPromo();
-        }, 12000);
+        }, 5000);
     }
 }

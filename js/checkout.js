@@ -1,4 +1,4 @@
-// 8. ENVÍO A WHATSAPP Y GUARDADO EN BD (CON VALIDACIÓN DE STOCK DINÁMICA)
+﻿// 8. ENVÃO A WHATSAPP Y GUARDADO EN BD (CON VALIDACIÃ“N DE STOCK DINÃMICA)
 function mostrarPasoCheckout(paso) {
     const checkout = document.getElementById('checkout');
     const pasos = {
@@ -36,7 +36,9 @@ function mostrarPasoCheckout(paso) {
 
 function limpiarCarritoConfirmado() {
     carrito = [];
+    pedidoEnProceso = false;
     localStorage.removeItem('carrito_panosotros');
+    if (typeof setEstadoBotonConfirmar === 'function') setEstadoBotonConfirmar(false);
     if (typeof actualizarBarra === 'function') actualizarBarra();
 }
 
@@ -61,19 +63,43 @@ function previewPedidoConfirmado() {
     setTimeout(() => mostrarPasoCheckout('confirmado'), 350);
 }
 
+function setEstadoBotonConfirmar(bloqueado, texto = null) {
+    const btnConfirmar = document.getElementById('btn-confirmar-pedido');
+    if (!btnConfirmar) return;
+
+    btnConfirmar.disabled = bloqueado;
+    btnConfirmar.innerText = texto || (bloqueado ? "PROCESANDO..." : "CONFIRMAR PEDIDO");
+    btnConfirmar.style.opacity = bloqueado ? "0.6" : "1";
+    btnConfirmar.style.cursor = bloqueado ? "not-allowed" : "pointer";
+}
+
+function desbloquearConfirmacionPedido() {
+    pedidoEnProceso = false;
+    setEstadoBotonConfirmar(false);
+}
+
 async function enviarWhatsApp() {
-    // 1. Validar si el local está abierto
+    if (pedidoEnProceso) {
+        mostrarMensaje("Ya estamos procesando tu pedido...", 2500);
+        return;
+    }
+
+    pedidoEnProceso = true;
+    setEstadoBotonConfirmar(true, "CREANDO PEDIDO...");
+
+    // 1. Validar si el local estÃ¡ abierto
     try {
         const { data: nuevaConfig } = await _supabase.from('configuracion').select('abierto').single();
         if (nuevaConfig) configTienda.abierto = nuevaConfig.abierto;
     } catch (e) { console.log("Error al re-verificar cierre"); }
 
     if (!configTienda.abierto) {
-        mostrarMensaje("Lo sentimos, el local ya se encuentra cerrado 😴", 4000);
+        mostrarMensaje("Lo sentimos, el local ya se encuentra cerrado ðŸ˜´", 4000);
+        desbloquearConfirmacionPedido();
         return;
     }
 
-    // --- NUEVA VALIDACIÓN DE STOCK PRODUCTO POR PRODUCTO ---
+    // --- NUEVA VALIDACIÃ“N DE STOCK PRODUCTO POR PRODUCTO ---
     try {
         // Obtenemos los datos frescos de la tabla hamburguesas
         const { data: productosFresh, error: errorStock } = await _supabase
@@ -111,14 +137,16 @@ async function enviarWhatsApp() {
             if (item.tipo_item === 'promo') {
                 const promoBD = promosFresh.find(p => String(p.id) === String(item.id));
                 if (!promoBD || promoBD.disponible === false) {
-                    mostrarMensaje(`Lo sentimos, la promo "${item.nombre}" ya no está disponible.`, 5000);
+                    mostrarMensaje(`Lo sentimos, la promo "${item.nombre}" ya no estÃ¡ disponible.`, 5000);
+                    desbloquearConfirmacionPedido();
                     return;
                 }
 
                 for (let variedad of (item.variedades || [])) {
                     const prodPromoBD = productosFresh.find(p => String(p.id) === String(variedad.id));
                     if (!prodPromoBD || prodPromoBD.disponible === false) {
-                        mostrarMensaje(`Lo sentimos, "${variedad.nombre}" se acaba de agotar. Eliminá la promo para continuar.`, 5000);
+                        mostrarMensaje(`Lo sentimos, "${variedad.nombre}" se acaba de agotar. EliminÃ¡ la promo para continuar.`, 5000);
+                        desbloquearConfirmacionPedido();
                         return;
                     }
                 }
@@ -126,7 +154,8 @@ async function enviarWhatsApp() {
                 for (let extra of (item.extras || [])) {
                     const extraBD = extrasFresh.find(e => String(e.id) === String(extra.id));
                     if (!extraBD || extraBD.disponible === false) {
-                        mostrarMensaje(`Lo sentimos, el extra "${extra.nombre}" ya no está disponible.`, 5000);
+                        mostrarMensaje(`Lo sentimos, el extra "${extra.nombre}" ya no estÃ¡ disponible.`, 5000);
+                        desbloquearConfirmacionPedido();
                         return;
                     }
 
@@ -137,7 +166,8 @@ async function enviarWhatsApp() {
                         );
 
                         if (!extraPermitido) {
-                            mostrarMensaje(`El extra "${extra.nombre}" ya no está permitido en esta promo.`, 5000);
+                            mostrarMensaje(`El extra "${extra.nombre}" ya no estÃ¡ permitido en esta promo.`, 5000);
+                            desbloquearConfirmacionPedido();
                             return;
                         }
                     }
@@ -149,16 +179,18 @@ async function enviarWhatsApp() {
             
             // Si el producto no existe o disponible es false
             if (!prodBD || prodBD.disponible === false) {
-                mostrarMensaje(`⚠️ Lo sentimos \n\n El producto "${item.nombre}" se acaba de agotar. \n\n Por favor, eliminalo para continuar.`, 5000);
-                return; // Cortamos la ejecución aquí
+                mostrarMensaje(`âš ï¸ Lo sentimos \n\n El producto "${item.nombre}" se acaba de agotar. \n\n Por favor, eliminalo para continuar.`, 5000);
+                desbloquearConfirmacionPedido();
+                return; // Cortamos la ejecuciÃ³n aquÃ­
             }
         }
     } catch (e) {
         console.error("Error validando stock:", e);
-        mostrarMensaje("❌ Error al verificar stock. Reintenta.", 3000);
+        mostrarMensaje("âŒ Error al verificar stock. Reintenta.", 3000);
+        desbloquearConfirmacionPedido();
         return;
     }
-    // --- FIN VALIDACIÓN DE STOCK ---
+    // --- FIN VALIDACIÃ“N DE STOCK ---
 
     const nombre = document.getElementById('nombre-cliente').value.trim();
     const telefono = document.getElementById('telefono-cliente').value.trim(); 
@@ -167,18 +199,11 @@ async function enviarWhatsApp() {
     const pago = document.getElementById('metodo-pago').value;
 
     if (!nombre || (entrega === 'Delivery' && !dir)) {
-        mostrarMensaje("Completá tus datos ✍️", 3000);
+        mostrarMensaje("CompletÃ¡ tus datos âœï¸", 3000);
+        desbloquearConfirmacionPedido();
         return;
     }
 
-    const btnConfirmar = document.getElementById('btn-confirmar-pedido');
-    
-    if (btnConfirmar) {
-        btnConfirmar.disabled = true;
-        btnConfirmar.innerText = "PROCESANDO...";
-        btnConfirmar.style.opacity = "0.6";
-        btnConfirmar.style.cursor = "not-allowed";
-    }
     mostrarPasoCheckout('confirmando');
 
     const detalleBD = carrito.map(item => {
@@ -213,7 +238,7 @@ async function enviarWhatsApp() {
 
         let msg = ` *PEDIDO #${idGenerado || 'N/A'}* \n\n`;
         msg += `*Tu nombre:* ${nombre}\n*Entrega:* ${entrega}\n`;
-        if (entrega === 'Delivery') msg += `*Dirección:* ${dir}\n`;
+        if (entrega === 'Delivery') msg += `*DirecciÃ³n:* ${dir}\n`;
         msg += `*Pago:* ${pago}\n\n`;
 
         msg += `--------------------------\n`;
@@ -228,7 +253,7 @@ async function enviarWhatsApp() {
 
         if(entrega === "Delivery") {
             msg += `Subtotal: $${total - COSTO_ENVIO}\n`;
-            msg += `Envío: $${COSTO_ENVIO}\n`;
+            msg += `EnvÃ­o: $${COSTO_ENVIO}\n`;
         
         }
         if(entrega === "Retiro") {
@@ -238,9 +263,9 @@ async function enviarWhatsApp() {
         msg += `\n*TOTAL: $${total}*\n\n`;
 
         msg += `--------------------------\n`;
-        if (pago === 'Transferencia') msg += `Recordá preguntar por la disponibilidad del stock antes de enviar el comprobante \n`;
+        if (pago === 'Transferencia') msg += `RecordÃ¡ preguntar por la disponibilidad del stock antes de enviar el comprobante \n`;
         if (pago === 'Transferencia') msg += `--------------------------\n`;
-        msg += `Podés consultar el estado de tu pedido con el número *#${idGenerado}* en nuestra web.`;
+        msg += `PodÃ©s consultar el estado de tu pedido con el nÃºmero *#${idGenerado}* en nuestra web.`;
 
         whatsappPedidoUrl = `https://wa.me/${configTienda.whatsapp}?text=${encodeURIComponent(msg)}`;
         const confirmadoNumero = document.getElementById('pedido-confirmado-numero');
@@ -253,24 +278,15 @@ async function enviarWhatsApp() {
             abrirWhatsappConfirmado();
             
             setTimeout(() => {
-                if (btnConfirmar) {
-                    btnConfirmar.disabled = false;
-                    btnConfirmar.innerText = "CONFIRMAR PEDIDO";
-                    btnConfirmar.style.opacity = "1";
-                    btnConfirmar.style.cursor = "pointer";
-                }
+                desbloquearConfirmacionPedido();
                 mostrarPantalla('inicio');
             }, 1000);
         }, 3800);
 
     } catch (err) {
         console.error(err);
-        mostrarMensaje("❌ Error de conexión. Reintenta.", 3000);
-        if (btnConfirmar) {
-            btnConfirmar.disabled = false;
-            btnConfirmar.innerText = "CONFIRMAR PEDIDO";
-            btnConfirmar.style.opacity = "1";
-        }
+        mostrarMensaje("âŒ Error de conexiÃ³n. Reintenta.", 3000);
+        desbloquearConfirmacionPedido();
         mostrarPasoCheckout('datos');
     }
 }
