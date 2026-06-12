@@ -143,12 +143,14 @@ async function cargarProductosDesdeBD() {
         if (error) throw error;
         
         // Actualizamos la variable global 'productos' con los datos más recientes
-        productos = data.map(p => ({
-            ...p,
-            foto: normalizarFotoProducto(p.foto),
-            desc: p.desc || 'Combo de mini burgers.',
-            ingredientes: p.ingredientes ? p.ingredientes.split(',').map(i => i.trim()) : []
-        }));
+        productos = data
+            .filter(p => p.mostrar_en_menu !== false)
+            .map(p => ({
+                ...p,
+                foto: normalizarFotoProducto(p.foto),
+                desc: p.desc || 'Combo de mini burgers.',
+                ingredientes: p.ingredientes ? p.ingredientes.split(',').map(i => i.trim()) : []
+            }));
         
     } catch (err) {
         console.error("Error cargando base de datos:", err);
