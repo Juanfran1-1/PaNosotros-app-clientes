@@ -233,12 +233,46 @@
     font-weight: 900;
 }
 
+.phone-field {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: minmax(116px, 0.38fr) 1fr;
+    gap: 8px;
+}
+
+.phone-field select,
+.phone-field input {
+    margin-top: 0;
+}
+
+.phone-field select {
+    min-height: 54px;
+    padding: 0 10px;
+    border: 1px solid var(--linea);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font-family: inherit;
+    font-weight: 800;
+    outline: none;
+}
+
+.phone-field select:focus {
+    border-color: rgba(255, 204, 0, 0.76);
+}
+
 .checkout-help {
     display: block;
     margin-top: 8px;
     color: var(--amarillo);
     font-size: 0.82rem;
     font-weight: 800;
+}
+
+@media (max-width: 370px) {
+    .phone-field {
+        grid-template-columns: 1fr;
+    }
 }
 
 .checkout-reveal {

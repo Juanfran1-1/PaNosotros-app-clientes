@@ -82,6 +82,15 @@ function normalizarNumeroWhatsapp(numero) {
     return String(numero || '').replace(/\D/g, '');
 }
 
+function obtenerTelefonoClienteWhatsapp() {
+    const codigoPais = normalizarNumeroWhatsapp(document.getElementById('codigo-pais-cliente')?.value || '');
+    const telefonoLocal = normalizarNumeroWhatsapp(document.getElementById('telefono-cliente')?.value || '');
+
+    if (!codigoPais || !telefonoLocal) return '';
+
+    return `+${codigoPais}${telefonoLocal}`;
+}
+
 async function enviarWhatsApp() {
     if (pedidoEnProceso) {
         mostrarMensaje("Ya estamos procesando tu pedido...", 2500);
@@ -197,7 +206,7 @@ async function enviarWhatsApp() {
     // --- FIN VALIDACIÃ“N DE STOCK ---
 
     const nombre = document.getElementById('nombre-cliente').value.trim();
-    const telefono = document.getElementById('telefono-cliente').value.trim(); 
+    const telefono = obtenerTelefonoClienteWhatsapp();
     const entrega = document.getElementById('metodo-entrega').value;
     const dir = document.getElementById('dir-cliente').value.trim();
     const pago = document.getElementById('metodo-pago').value;
