@@ -127,6 +127,7 @@ function buildEmailHtml(pedido: PedidoPayload) {
       <p>
         <strong>Nombre:</strong> ${escapeHtml(pedido.cliente)}<br>
         <strong>WhatsApp:</strong> ${escapeHtml(pedido.telefono)}${whatsappUrl ? ` - <a href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">abrir chat</a>` : ""}<br>
+        ${whatsappUrl ? `<strong>Link WhatsApp:</strong> <a href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">${escapeHtml(whatsappUrl)}</a><br>` : ""}
         <strong>Entrega:</strong> ${escapeHtml(pedido.entrega)}<br>
         <strong>Direccion:</strong> ${escapeHtml(pedido.direccion)}<br>
         <strong>Pago:</strong> ${escapeHtml(pedido.metodo_pago)}
