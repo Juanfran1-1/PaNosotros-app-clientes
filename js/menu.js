@@ -36,6 +36,28 @@ function renderFondoDesktopMenu() {
     `;
 }
 
+function renderFooterDesktopMenu() {
+    const whatsapp = normalizarNumeroWhatsapp(configTienda.whatsapp || "");
+    const whatsappTexto = whatsapp ? `+${whatsapp}` : "WhatsApp no configurado";
+
+    return `
+        <footer class="menu-desktop-footer">
+            <div class="menu-footer-brand">
+                <img src="src/Logo.jpg" alt="Pa Nosotros">
+                <div>
+                    <strong>PA' NOSOTROS</strong>
+                    <span>Mini burgers</span>
+                </div>
+            </div>
+            <div class="menu-footer-links">
+                ${whatsapp ? `<a href="https://wa.me/${whatsapp}" target="_blank" rel="noopener">${whatsappTexto}</a>` : `<span>${whatsappTexto}</span>`}
+                <a href="https://www.instagram.com/mminiburgers/" target="_blank" rel="noopener">@mminiburgers</a>
+            </div>
+            <p>Fundado por Juan Uceda. El que empuja la idea, banca el fuego y la hace crecer.</p>
+        </footer>
+    `;
+}
+
 function cargarMenu() {
     const contenedor = document.getElementById('contenedor-menu');
     if (!contenedor) return;
@@ -56,7 +78,14 @@ function cargarMenu() {
     const promosVisibles = promos.filter(promoTieneVariedadesDisponibles);
 
     contenedor.innerHTML += `
-        <p class="menu-subtitle">Elegí tus favoritos</p>
+        <div class="menu-desktop-title">
+            <img src="src/Logo.jpg" alt="Pa Nosotros">
+            <div>
+                <h2>Menú</h2>
+                <p class="menu-subtitle">Elegí tus favoritos</p>
+            </div>
+        </div>
+        <p class="menu-subtitle menu-subtitle-mobile">Elegí tus favoritos</p>
         <div class="menu-tabs" aria-label="Categorías del menú">
             ${renderFiltroMenu('Todas', 'todas')}
             ${renderFiltroMenu('Minis', 'minis')}
@@ -139,6 +168,8 @@ function cargarMenu() {
             </div>
         `;
     }
+
+    contenedor.innerHTML += renderFooterDesktopMenu();
 
     // Ocultar el botón flotante del carrito si el local está cerrado
     const btnCarrito = document.getElementById('btn-flotante-carrito');
