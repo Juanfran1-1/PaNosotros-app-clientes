@@ -67,32 +67,34 @@ async function cargarConfiguracion() {
 
 // --- NUEVA FUNCIÓN: GUARDAR PEDIDO EN TABLA Y DEVOLVER ID ---
 async function guardarPedidoEnSupabase(datos) {
-    try {
+    const estadoInicial = (datos.metodo_pago === 'Transferencia') ? "Pendiente de Pago" : "Esperando Confirmacion";
 
-        const estadoInicial = (datos.metodo_pago === 'Transferencia') ? "Pendiente de Pago" : "Esperando Confirmacion";
+    const { data, error } = await _supabase
+        .from('pedidos')
+        .insert([
+            {
+                fecha: new Date().toISOString(),
+                detalle: datos.detalle,
+                cliente: datos.cliente,
+                numero: datos.telefono,
+                monto: parseInt(datos.monto),
+                metodo_pago: datos.metodo_pago,
+                entrega: datos.entrega,
+                direccion: datos.direccion,
+                estado: estadoInicial
+            }
+        ]).select();
 
-        const { data, error } = await _supabase
-            .from('pedidos')
-            .insert([
-                {
-                    fecha: new Date().toISOString(),
-                    detalle: datos.detalle,
-                    cliente: datos.cliente,
-                    numero: datos.telefono, // <-- AGREGAR ESTO (asegurate que la columna en Supabase se llame así)
-                    monto: parseInt(datos.monto),
-                    metodo_pago: datos.metodo_pago,
-                    entrega: datos.entrega,
-                    direccion: datos.direccion,
-                    estado: estadoInicial 
-                }
-            ]).select();
-
-        if (error) throw error;
-        return data[0].id;
-    } catch (err) {
-        console.error("Error al guardar pedido:", err);
-        return null;
+    if (error) {
+        console.error("Error al guardar pedido:", error);
+        throw error;
     }
+
+    if (!data || !data[0] || !data[0].id) {
+        throw new Error("Supabase no devolvió el número del pedido.");
+    }
+
+    return data[0].id;
 }
 
 async function guardarItemsPedidoEnSupabase(pedidoId) {
@@ -134,6 +136,17 @@ async function guardarItemsPedidoEnSupabase(pedidoId) {
 
             if (errorExtras) throw errorExtras;
         }
+    }
+}
+
+async function enviarNotificacionPedidoEmail(datosPedido) {
+    const { error } = await _supabase.functions.invoke('notify-order', {
+        body: datosPedido
+    });
+
+    if (error) {
+        console.error("Error al enviar notificación por email:", error);
+        throw error;
     }
 }
 
