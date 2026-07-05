@@ -44,6 +44,7 @@ function cargarMenu() {
     const menu = document.getElementById('menu');
     if (menu) {
         menu.insertAdjacentHTML('afterbegin', renderFondoDesktopMenu());
+        menu.insertAdjacentHTML('afterbegin', '<div class="menu-bg-logo" aria-hidden="true"></div>');
     }
 
     contenedor.innerHTML = "";

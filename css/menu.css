@@ -223,13 +223,13 @@
     }
 
     .menu-bg-logo {
-        top: 50%;
+        top: 28%;
         right: max(40px, calc((100vw - 1180px) / 2));
-        width: min(46vw, 560px);
+        width: min(28vw, 360px);
         aspect-ratio: 1;
         background: url("../src/Logo.jpg") center/contain no-repeat;
-        opacity: 0.075;
-        filter: blur(5px) saturate(0.8);
+        opacity: 0.1;
+        filter: blur(4px) saturate(0.85);
         transform: translateY(-50%);
     }
 
