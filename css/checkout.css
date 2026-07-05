@@ -240,9 +240,21 @@
     gap: 8px;
 }
 
+.phone-field.is-custom {
+    grid-template-columns: minmax(116px, 0.38fr) minmax(74px, 0.22fr) 1fr;
+}
+
 .phone-field select,
 .phone-field input {
     margin-top: 0;
+}
+
+.phone-country-other {
+    display: none;
+}
+
+.phone-field.is-custom .phone-country-other {
+    display: block;
 }
 
 .phone-field select {
@@ -270,6 +282,7 @@
 }
 
 @media (max-width: 370px) {
+    .phone-field.is-custom,
     .phone-field {
         grid-template-columns: 1fr;
     }
