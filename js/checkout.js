@@ -82,14 +82,39 @@ function normalizarNumeroWhatsapp(numero) {
     return String(numero || '').replace(/\D/g, '');
 }
 
+function actualizarCampoCodigoPaisOtro() {
+    const select = document.getElementById('codigo-pais-cliente');
+    const campoOtro = document.getElementById('codigo-pais-otro');
+    const phoneField = select?.closest('.phone-field');
+    const esOtro = select?.value === 'otro';
+
+    if (phoneField) phoneField.classList.toggle('is-custom', esOtro);
+    if (campoOtro) {
+        campoOtro.disabled = !esOtro;
+        if (!esOtro) campoOtro.value = '';
+    }
+}
+
 function obtenerTelefonoClienteWhatsapp() {
-    const codigoPais = normalizarNumeroWhatsapp(document.getElementById('codigo-pais-cliente')?.value || '');
+    const selectCodigoPais = document.getElementById('codigo-pais-cliente');
+    const codigoSeleccionado = selectCodigoPais?.value || '';
+    const codigoPais = codigoSeleccionado === 'otro'
+        ? normalizarNumeroWhatsapp(document.getElementById('codigo-pais-otro')?.value || '')
+        : normalizarNumeroWhatsapp(codigoSeleccionado);
     const telefonoLocal = normalizarNumeroWhatsapp(document.getElementById('telefono-cliente')?.value || '');
 
     if (!codigoPais || !telefonoLocal) return '';
 
     return `+${codigoPais}${telefonoLocal}`;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const selectCodigoPais = document.getElementById('codigo-pais-cliente');
+    if (!selectCodigoPais) return;
+
+    selectCodigoPais.addEventListener('change', actualizarCampoCodigoPaisOtro);
+    actualizarCampoCodigoPaisOtro();
+});
 
 async function enviarWhatsApp() {
     if (pedidoEnProceso) {
