@@ -525,3 +525,25 @@
     color: #050505;
     transform: translateY(-1px);
 }
+
+@media (min-width: 900px) {
+    #checkout {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 34px 40px 120px;
+        border-left: 1px solid var(--linea);
+        border-right: 1px solid var(--linea);
+        background:
+            radial-gradient(circle at 50% 0%, rgba(255, 204, 0, 0.1), transparent 34%),
+            var(--negro);
+    }
+
+    .checkout-back {
+        top: 36px;
+        left: 40px;
+    }
+
+    .checkout-confirmed {
+        max-width: none;
+    }
+}

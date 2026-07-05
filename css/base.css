@@ -134,3 +134,18 @@ select option {
         overflow: hidden;
     }
 }
+
+@media (min-width: 900px) {
+    body {
+        padding: 0;
+        display: block;
+    }
+
+    section {
+        max-width: none;
+        min-height: 100vh;
+        min-height: 100dvh;
+        border: 0;
+        box-shadow: none;
+    }
+}

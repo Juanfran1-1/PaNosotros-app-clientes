@@ -21,9 +21,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     ultimoSnapshotMenu = crearSnapshotMenu();
 
+    const esDesktop = window.matchMedia('(min-width: 900px)').matches;
+
     renderHomePromos();
     iniciarRealtimeMenu();
     iniciarPollingMenu();
-    mostrarPantalla("inicio");
+    mostrarPantalla(esDesktop ? "menu" : "inicio");
     toggleDir();
 });
