@@ -40,6 +40,36 @@
     box-shadow: 0 0 34px rgba(255, 204, 0, 0.14);
 }
 
+.home-review-button {
+    position: absolute;
+    top: 24px;
+    right: 22px;
+    z-index: 3;
+    width: 54px;
+    height: 54px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 204, 0, 0.36);
+    border-radius: 17px;
+    background: rgba(5, 5, 5, 0.68);
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.34), 0 0 20px rgba(255, 204, 0, 0.12);
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+}
+
+.home-review-button img {
+    width: 38px;
+    height: 38px;
+    display: block;
+    border-radius: 11px;
+    object-fit: cover;
+}
+
+.home-review-button:active {
+    transform: translateY(1px) scale(0.98);
+}
+
 .hero-title {
     position: relative;
     z-index: 1;
@@ -249,5 +279,11 @@
 
     .home-info-item {
         padding: 12px 0;
+    }
+}
+
+@media (min-width: 900px) {
+    .home-review-button {
+        display: none;
     }
 }
