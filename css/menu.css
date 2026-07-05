@@ -174,6 +174,29 @@
     #menu {
         padding: 32px 40px 120px;
         text-align: left;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 82% 22%, rgba(255, 204, 0, 0.1), transparent 26%),
+            linear-gradient(90deg, #030303 0%, #050505 46%, #0a0803 100%);
+    }
+
+    #menu::before {
+        content: "";
+        position: fixed;
+        top: 50%;
+        right: max(40px, calc((100vw - 1180px) / 2));
+        z-index: 0;
+        width: min(46vw, 560px);
+        aspect-ratio: 1;
+        background: url("../src/Logo.jpg") center/contain no-repeat;
+        opacity: 0.075;
+        filter: blur(5px) saturate(0.8);
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+
+    #menu .video-fondo {
+        display: none;
     }
 
     #menu > div[onclick*="inicio"] {
