@@ -96,14 +96,21 @@ function inicializarReviewTags() {
 document.addEventListener('DOMContentLoaded', inicializarReviewTags);
 
 async function guardarResena() {
-    const nombre = document.getElementById('resena-nombre')?.value.trim();
+    const inputNombre = document.getElementById('resena-nombre');
+    const nombre = inputNombre?.value.trim();
     const puntaje = Number(document.getElementById('resena-puntaje')?.value || 0);
     const texto = document.getElementById('resena-texto')?.value.trim();
     const boton = document.getElementById('btn-guardar-resena');
     const tags = document.getElementById('resena-tags')?.value || '';
 
-    if (!nombre || !texto || !puntaje) {
-        mostrarMensaje('Completá nombre, puntaje y reseña.', 3000);
+    if (!nombre || nombre.length < 2) {
+        mostrarMensaje('Poné tu nombre para dejar la reseña.', 3000);
+        inputNombre?.focus();
+        return;
+    }
+
+    if (!texto || !puntaje) {
+        mostrarMensaje('Completá puntaje y reseña.', 3000);
         return;
     }
 
