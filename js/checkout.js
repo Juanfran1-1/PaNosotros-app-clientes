@@ -1,4 +1,4 @@
-﻿// 8. ENVÃO A WHATSAPP Y GUARDADO EN BD (CON VALIDACIÃ“N DE STOCK DINÃMICA)
+﻿// 8. ENVíO A WHATSAPP Y GUARDADO EN BD (CON VALIDACIí“N DE STOCK DINíMICA)
 function mostrarPasoCheckout(paso) {
     const checkout = document.getElementById('checkout');
     const pasos = {
@@ -125,7 +125,7 @@ async function enviarWhatsApp() {
     pedidoEnProceso = true;
     setEstadoBotonConfirmar(true, "CREANDO PEDIDO...");
 
-    // 1. Validar si el local estÃ¡ abierto
+    // 1. Validar si el local está abierto
     try {
         const { data: nuevaConfig } = await _supabase.from('configuracion').select('abierto').single();
         if (nuevaConfig) configTienda.abierto = nuevaConfig.abierto;
@@ -137,7 +137,7 @@ async function enviarWhatsApp() {
         return;
     }
 
-    // --- NUEVA VALIDACIÃ“N DE STOCK PRODUCTO POR PRODUCTO ---
+    // --- NUEVA VALIDACIí“N DE STOCK PRODUCTO POR PRODUCTO ---
     try {
         // Obtenemos los datos frescos de la tabla hamburguesas
         const { data: productosFresh, error: errorStock } = await _supabase
@@ -175,7 +175,7 @@ async function enviarWhatsApp() {
             if (item.tipo_item === 'promo') {
                 const promoBD = promosFresh.find(p => String(p.id) === String(item.id));
                 if (!promoBD || promoBD.disponible === false) {
-                    mostrarMensaje(`Lo sentimos, la promo "${item.nombre}" ya no estÃ¡ disponible.`, 5000);
+                    mostrarMensaje(`Lo sentimos, la promo "${item.nombre}" ya no está disponible.`, 5000);
                     desbloquearConfirmacionPedido();
                     return;
                 }
@@ -183,7 +183,7 @@ async function enviarWhatsApp() {
                 for (let variedad of (item.variedades || [])) {
                     const prodPromoBD = productosFresh.find(p => String(p.id) === String(variedad.id));
                     if (!prodPromoBD || prodPromoBD.disponible === false) {
-                        mostrarMensaje(`Lo sentimos, "${variedad.nombre}" se acaba de agotar. EliminÃ¡ la promo para continuar.`, 5000);
+                        mostrarMensaje(`Lo sentimos, "${variedad.nombre}" se acaba de agotar. Eliminá la promo para continuar.`, 5000);
                         desbloquearConfirmacionPedido();
                         return;
                     }
@@ -192,7 +192,7 @@ async function enviarWhatsApp() {
                 for (let extra of (item.extras || [])) {
                     const extraBD = extrasFresh.find(e => String(e.id) === String(extra.id));
                     if (!extraBD || extraBD.disponible === false) {
-                        mostrarMensaje(`Lo sentimos, el extra "${extra.nombre}" ya no estÃ¡ disponible.`, 5000);
+                        mostrarMensaje(`Lo sentimos, el extra "${extra.nombre}" ya no está disponible.`, 5000);
                         desbloquearConfirmacionPedido();
                         return;
                     }
@@ -204,7 +204,7 @@ async function enviarWhatsApp() {
                         );
 
                         if (!extraPermitido) {
-                            mostrarMensaje(`El extra "${extra.nombre}" ya no estÃ¡ permitido en esta promo.`, 5000);
+                            mostrarMensaje(`El extra "${extra.nombre}" ya no está permitido en esta promo.`, 5000);
                             desbloquearConfirmacionPedido();
                             return;
                         }
@@ -219,7 +219,7 @@ async function enviarWhatsApp() {
             if (!prodBD || prodBD.disponible === false) {
                 mostrarMensaje(`âš ï¸ Lo sentimos \n\n El producto "${item.nombre}" se acaba de agotar. \n\n Por favor, eliminalo para continuar.`, 5000);
                 desbloquearConfirmacionPedido();
-                return; // Cortamos la ejecuciÃ³n aquÃ­
+                return; // Cortamos la ejecución aquí­
             }
         }
     } catch (e) {
@@ -228,7 +228,7 @@ async function enviarWhatsApp() {
         desbloquearConfirmacionPedido();
         return;
     }
-    // --- FIN VALIDACIÃ“N DE STOCK ---
+    // --- FIN VALIDACIí“N DE STOCK ---
 
     const nombre = document.getElementById('nombre-cliente').value.trim();
     const telefono = obtenerTelefonoClienteWhatsapp();
@@ -237,14 +237,14 @@ async function enviarWhatsApp() {
     const pago = document.getElementById('metodo-pago').value;
 
     if (!nombre || !telefono || (entrega === 'Delivery' && !dir)) {
-        mostrarMensaje("CompletÃ¡ tus datos âœï¸", 3000);
+        mostrarMensaje("Completá tus datos âœï¸", 3000);
         desbloquearConfirmacionPedido();
         return;
     }
 
     const whatsappDestino = normalizarNumeroWhatsapp(configTienda.whatsapp);
     if (!whatsappDestino) {
-        mostrarMensaje("WhatsApp no configurado. ReintentÃ¡ mÃ¡s tarde.", 4000);
+        mostrarMensaje("WhatsApp no configurado. Reintentá más tarde.", 4000);
         desbloquearConfirmacionPedido();
         return;
     }
@@ -308,7 +308,7 @@ async function enviarWhatsApp() {
 
         let msg = ` *PEDIDO #${idGenerado || 'N/A'}* \n\n`;
         msg += `*Tu nombre:* ${nombre}\n*Entrega:* ${entrega}\n`;
-        if (entrega === 'Delivery') msg += `*DirecciÃ³n:* ${dir}\n`;
+        if (entrega === 'Delivery') msg += `*Dirección:* ${dir}\n`;
         msg += `*Pago:* ${pago}\n\n`;
 
         msg += `--------------------------\n`;
@@ -323,7 +323,7 @@ async function enviarWhatsApp() {
 
         if(entrega === "Delivery") {
             msg += `Subtotal: $${total - COSTO_ENVIO}\n`;
-            msg += `EnvÃ­o: $${COSTO_ENVIO}\n`;
+            msg += `Enví­o: $${COSTO_ENVIO}\n`;
         
         }
         if(entrega === "Retiro") {
@@ -333,9 +333,9 @@ async function enviarWhatsApp() {
         msg += `\n*TOTAL: $${total}*\n\n`;
 
         msg += `--------------------------\n`;
-        if (pago === 'Transferencia') msg += `RecordÃ¡ preguntar por la disponibilidad del stock antes de enviar el comprobante \n`;
+        if (pago === 'Transferencia') msg += `Recordá preguntar por la disponibilidad del stock antes de enviar el comprobante \n`;
         if (pago === 'Transferencia') msg += `--------------------------\n`;
-        msg += `PodÃ©s consultar el estado de tu pedido con el nÃºmero *#${idGenerado}* en nuestra web.`;
+        msg += `Podés consultar el estado de tu pedido con el níºmero *#${idGenerado}* en nuestra web.`;
 
         whatsappPedidoUrl = `https://wa.me/${whatsappDestino}?text=${encodeURIComponent(msg)}`;
         const confirmadoNumero = document.getElementById('pedido-confirmado-numero');
@@ -355,7 +355,7 @@ async function enviarWhatsApp() {
 
     } catch (err) {
         console.error(err);
-        mostrarMensaje("âŒ Error de conexiÃ³n. Reintenta.", 3000);
+        mostrarMensaje(" Error de conexión. Reintenta.", 3000);
         desbloquearConfirmacionPedido();
         mostrarPasoCheckout('datos');
     }
