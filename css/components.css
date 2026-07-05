@@ -94,7 +94,7 @@
 
 .modal-resena-panel {
     position: relative;
-    width: min(460px, 100%);
+    width: min(660px, 100%);
     padding: 24px;
     border: 1px solid rgba(255, 204, 0, 0.28);
     border-radius: 22px;
@@ -485,6 +485,15 @@
         font-weight: 800;
     }
 
+    .menu-review-button img {
+        width: 24px;
+        height: 24px;
+        margin-right: 8px;
+        border-radius: 7px;
+        object-fit: cover;
+        opacity: 0.88;
+    }
+
     .menu-review-button:hover {
         border-color: rgba(255, 204, 0, 0.55);
         color: var(--amarillo);
@@ -564,5 +573,79 @@
 
     .btn-carrito:active {
         transform: translateY(1px);
+    }
+}
+
+.burger-rating {
+    display: flex;
+    gap: 0px;
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px solid var(--linea);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.burger-rating button {
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 13px;
+    background:
+        rgba(255, 255, 255, 0.05)
+        url("../src/burger-icon-white.webp") center/34px 34px no-repeat;
+    cursor: pointer;
+    opacity: 0.35;
+    filter: saturate(0.7);
+    transition: transform 0.15s ease, opacity 0.15s ease, filter 0.15s ease, background 0.15s ease;
+    margin-left: 55px;
+}
+
+.burger-rating button.active {
+    opacity: 1;
+    filter: saturate(1);
+    background:
+        rgba(255, 204, 0, 0.14)
+        url("../src/burger-icon-color.webp") center/36px 36px no-repeat;
+    box-shadow: 0 0 18px rgba(255, 204, 0, 0.18);
+}
+
+.burger-rating button:hover {
+    transform: translateY(-2px) scale(1.08);
+}
+
+.review-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    padding-left: 40px;
+}
+
+.review-tags button {
+    padding: 11px 13px;
+    border: 1px solid rgba(255, 204, 0, 0.28);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #fff;
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.review-tags button.active {
+    background: rgba(255, 204, 0, 0.16);
+    border-color: rgba(255, 204, 0, 0.65);
+    color: var(--amarillo);
+}
+
+@media (max-width: 420px) {
+    .burger-rating {
+        gap: 6px;
+    }
+
+    .burger-rating button {
+        width: 42px;
+        height: 42px;
+        font-size: 1.35rem;
     }
 }
