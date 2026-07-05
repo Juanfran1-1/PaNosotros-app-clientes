@@ -640,16 +640,17 @@
 
 @media (max-width: 899px) {
     .modal-resena {
-        align-items: flex-end;
-        padding: 12px;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
     }
 
     .modal-resena-panel {
-        width: 100%;
-        max-height: calc(100dvh - 24px);
+        width: min(390px, 100%);
+        max-height: calc(100dvh - 36px);
         overflow-y: auto;
         padding: 18px;
-        border-radius: 22px 22px 16px 16px;
+        border-radius: 20px;
     }
 
     .modal-resena-close {
