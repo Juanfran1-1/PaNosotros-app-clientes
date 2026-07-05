@@ -55,6 +55,18 @@ function formatMoney(value: unknown) {
   }).format(numberValue);
 }
 
+function normalizeWhatsappNumber(value: unknown) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function buildCustomerWhatsappUrl(pedido: PedidoPayload) {
+  const telefono = normalizeWhatsappNumber(pedido.telefono);
+  if (!telefono) return "";
+
+  const texto = `Hola ${pedido.cliente || ""}, te escribimos por tu pedido #${pedido.pedido_id || ""} de PA' NOSOTROS.`;
+  return `https://wa.me/${telefono}?text=${encodeURIComponent(texto)}`;
+}
+
 function buildItemsHtml(items: PedidoItem[] = []) {
   if (!items.length) {
     return "<p>Sin detalle estructurado.</p>";
@@ -94,15 +106,27 @@ function buildItemsHtml(items: PedidoItem[] = []) {
 }
 
 function buildEmailHtml(pedido: PedidoPayload) {
+  const whatsappUrl = buildCustomerWhatsappUrl(pedido);
+  const whatsappButton = whatsappUrl
+    ? `
+      <p style="margin:16px 0 22px">
+        <a href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener" style="display:inline-block;padding:12px 16px;border-radius:10px;background:#25d366;color:#0b1b10;text-decoration:none;font-weight:700">
+          Abrir WhatsApp del cliente
+        </a>
+      </p>
+    `
+    : "";
+
   return `
     <div style="font-family:Arial,sans-serif;color:#222;line-height:1.45">
       <h2 style="margin:0 0 12px">Nuevo pedido #${escapeHtml(pedido.pedido_id || "N/A")}</h2>
       <p style="margin:0 0 18px">Se creo un pedido desde el menu web.</p>
+      ${whatsappButton}
 
       <h3>Cliente</h3>
       <p>
         <strong>Nombre:</strong> ${escapeHtml(pedido.cliente)}<br>
-        <strong>WhatsApp:</strong> ${escapeHtml(pedido.telefono)}<br>
+        <strong>WhatsApp:</strong> ${escapeHtml(pedido.telefono)}${whatsappUrl ? ` - <a href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">abrir chat</a>` : ""}<br>
         <strong>Entrega:</strong> ${escapeHtml(pedido.entrega)}<br>
         <strong>Direccion:</strong> ${escapeHtml(pedido.direccion)}<br>
         <strong>Pago:</strong> ${escapeHtml(pedido.metodo_pago)}
