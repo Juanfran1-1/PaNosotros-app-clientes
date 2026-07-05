@@ -203,8 +203,8 @@
         position: absolute;
         inset: 0;
         background:
-            radial-gradient(circle at 70% 36%, rgba(255, 204, 0, 0.12), transparent 26%),
-            linear-gradient(90deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.78) 48%, rgba(0, 0, 0, 0.92) 100%);
+            radial-gradient(circle at 70% 36%, rgba(255, 204, 0, 0.1), transparent 28%),
+            linear-gradient(90deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.68) 50%, rgba(0, 0, 0, 0.86) 100%);
     }
 
     .menu-bg-carousel span {
@@ -217,8 +217,8 @@
         background-position: center;
         background-size: cover;
         opacity: 0;
-        filter: blur(10px) saturate(0.8) contrast(0.9);
-        transform: scale(1.04);
+        filter: blur(5px) saturate(1) contrast(1.02);
+        transform: scale(1.02);
         animation: menuBgFade 36s infinite;
     }
 
@@ -336,7 +336,7 @@
 
     18%,
     34% {
-        opacity: 0.16;
+        opacity: 0.28;
     }
 
     44%,
