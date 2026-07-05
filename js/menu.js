@@ -12,9 +12,41 @@ function renderFiltroMenu(nombre, filtro) {
         </button>`;
 }
 
+function obtenerImagenesFondoMenu() {
+    const imagenes = [
+        ...promos.map(promo => promo.foto),
+        ...productos.map(producto => producto.foto)
+    ].filter(foto => foto && !String(foto).toLowerCase().includes('logo.jpg'));
+
+    return [...new Set(imagenes)].slice(0, 6);
+}
+
+function renderFondoDesktopMenu() {
+    const imagenes = obtenerImagenesFondoMenu();
+
+    if (imagenes.length === 0) {
+        return '<div class="menu-bg-logo" aria-hidden="true"></div>';
+    }
+
+    return `
+        <div class="menu-bg-carousel" aria-hidden="true">
+            ${imagenes.map((foto, index) => `
+                <span style="background-image: url('${foto}'); animation-delay: ${index * 6}s;"></span>
+            `).join('')}
+        </div>
+    `;
+}
+
 function cargarMenu() {
     const contenedor = document.getElementById('contenedor-menu');
     if (!contenedor) return;
+
+    document.querySelectorAll('#menu > .menu-bg-carousel, #menu > .menu-bg-logo').forEach(fondo => fondo.remove());
+    const menu = document.getElementById('menu');
+    if (menu) {
+        menu.insertAdjacentHTML('afterbegin', renderFondoDesktopMenu());
+    }
+
     contenedor.innerHTML = "";
 
     // Verificar si el local está cerrado para el modo "solo lectura"

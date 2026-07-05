@@ -170,6 +170,11 @@
     font-size: 0.88rem;
 }
 
+.menu-bg-carousel,
+.menu-bg-logo {
+    display: none;
+}
+
 @media (min-width: 900px) {
     #menu {
         padding: 32px 40px 120px;
@@ -180,19 +185,52 @@
             linear-gradient(90deg, #030303 0%, #050505 46%, #0a0803 100%);
     }
 
-    #menu::before {
-        content: "";
+    .menu-bg-carousel,
+    .menu-bg-logo {
+        display: block;
         position: fixed;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .menu-bg-carousel {
+        inset: 0;
+        overflow: hidden;
+    }
+
+    .menu-bg-carousel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at 70% 36%, rgba(255, 204, 0, 0.12), transparent 26%),
+            linear-gradient(90deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.78) 48%, rgba(0, 0, 0, 0.92) 100%);
+    }
+
+    .menu-bg-carousel span {
+        position: absolute;
+        top: 4vh;
+        right: max(32px, calc((100vw - 1180px) / 2));
+        width: min(52vw, 720px);
+        height: 92vh;
+        border-radius: 34px;
+        background-position: center;
+        background-size: cover;
+        opacity: 0;
+        filter: blur(10px) saturate(0.8) contrast(0.9);
+        transform: scale(1.04);
+        animation: menuBgFade 36s infinite;
+    }
+
+    .menu-bg-logo {
         top: 50%;
         right: max(40px, calc((100vw - 1180px) / 2));
-        z-index: 0;
         width: min(46vw, 560px);
         aspect-ratio: 1;
         background: url("../src/Logo.jpg") center/contain no-repeat;
         opacity: 0.075;
         filter: blur(5px) saturate(0.8);
         transform: translateY(-50%);
-        pointer-events: none;
     }
 
     #menu .video-fondo {
@@ -204,6 +242,8 @@
     }
 
     #menu h2 {
+        position: relative;
+        z-index: 1;
         max-width: 1180px;
         margin: 8px auto 10px !important;
         font-size: 3.35rem;
@@ -211,6 +251,8 @@
     }
 
     #contenedor-menu {
+        position: relative;
+        z-index: 1;
         max-width: 1180px;
         margin: 0 auto;
         display: grid;
@@ -283,6 +325,23 @@
 
     .menu-card-tag {
         margin-bottom: 8px;
+    }
+}
+
+@keyframes menuBgFade {
+    0%,
+    12% {
+        opacity: 0;
+    }
+
+    18%,
+    34% {
+        opacity: 0.16;
+    }
+
+    44%,
+    100% {
+        opacity: 0;
     }
 }
 
