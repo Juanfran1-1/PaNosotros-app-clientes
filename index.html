@@ -102,6 +102,13 @@
                     <path d="M17 17.5a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6Z"></path>
                 </svg>
             </button>
+            <button
+                class="menu-review-button"
+                type="button"
+                onclick="abrirModalResena()"
+            >
+                Dejanos tu reseña
+            </button>
             <h2 style="margin-top: 40px; position: relative; z-index: 1;">Menú</h2>
             
             <div class="lista-productos" id="contenedor-menu" style="position: relative; z-index: 1;"></div>
@@ -112,6 +119,36 @@
                 <span class="cart-price">$<span id="cart-total">0</span></span>
             </button>
     </section>
+
+    <div id="modal-resena" class="modal-resena" style="display:none;">
+        <div class="modal-resena-panel">
+            <button class="modal-resena-close" type="button" onclick="cerrarModalResena()" aria-label="Cerrar">×</button>
+            <span class="modal-resena-kicker">Tu opinión</span>
+            <h3>Dejanos tu reseña</h3>
+            <p>Contanos cómo estuvo tu experiencia con las mini burgers.</p>
+
+            <label for="resena-nombre">Nombre</label>
+            <input type="text" id="resena-nombre" maxlength="60" placeholder="Ej: Juan">
+
+            <label for="resena-puntaje">Mini burger</label>
+            <select id="resena-puntaje">
+                <option value="5">5</option>
+                <option value="4.5">4.5</option>
+                <option value="4">4</option>
+                <option value="3.5">3.5</option>
+                <option value="3">3</option>
+                <option value="2.5">2.5</option>
+                <option value="2">2</option>
+                <option value="1.5">1.5</option>
+                <option value="1">1</option>
+            </select>
+
+            <label for="resena-texto">Reseña</label>
+            <textarea id="resena-texto" maxlength="280" placeholder="Qué te gustó, qué pedirías de nuevo..."></textarea>
+
+            <button id="btn-guardar-resena" class="btn-principal" type="button" onclick="guardarResena()">GUARDAR RESEÑA</button>
+        </div>
+    </div>
 
     <section id="detalle-producto" style="display:none;">
         <div class="header-detalle">
@@ -222,6 +259,7 @@
     <script src="js/ui.js"></script>
     <script src="js/api.js"></script>
     <script src="js/tracking.js"></script>
+    <script src="js/reviews.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/menu.js"></script>
     <script src="js/cart.js"></script>
