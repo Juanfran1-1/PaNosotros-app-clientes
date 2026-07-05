@@ -161,3 +161,66 @@
     font-size: 0.9rem;
     font-weight: 800;
 }
+
+@media (min-width: 900px) {
+    #tracking {
+        min-height: 100vh;
+        padding: 0;
+        background:
+            radial-gradient(circle at 72% 22%, rgba(255, 204, 0, 0.1), transparent 26%),
+            linear-gradient(90deg, #030303 0%, #060606 52%, #0a0803 100%);
+    }
+
+    #tracking .video-fondo {
+        display: none;
+    }
+
+    #tracking::before {
+        background:
+            linear-gradient(90deg, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.72)),
+            url("../src/Logo.jpg") right 8vw center / min(34vw, 420px) no-repeat;
+        opacity: 0.16;
+        filter: blur(3px) saturate(0.8);
+    }
+
+    .tracking-content {
+        width: min(560px, calc(100vw - 80px));
+        min-height: 100vh;
+        margin-left: max(40px, calc((100vw - 1180px) / 2));
+        padding: 76px 0 56px;
+        justify-content: center;
+    }
+
+    .tracking-back {
+        position: fixed;
+        top: 28px;
+        left: max(40px, calc((100vw - 1180px) / 2));
+        width: 46px;
+        height: 46px;
+    }
+
+    .tracking-header {
+        margin-bottom: 24px;
+    }
+
+    .tracking-header h2 {
+        margin: 10px 0;
+        font-size: 3.1rem;
+        line-height: 0.9;
+    }
+
+    .tracking-header p {
+        max-width: 420px;
+        font-size: 1rem;
+    }
+
+    .cuadro-tracking {
+        padding: 24px;
+        border-radius: 24px;
+        background: rgba(5, 5, 5, 0.78);
+    }
+
+    .tracking-help {
+        background: rgba(5, 5, 5, 0.5);
+    }
+}

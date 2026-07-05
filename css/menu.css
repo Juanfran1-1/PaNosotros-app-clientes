@@ -169,3 +169,302 @@
     color: rgba(255, 255, 255, 0.68);
     font-size: 0.88rem;
 }
+
+.menu-bg-carousel,
+.menu-bg-logo,
+.menu-desktop-title,
+.menu-desktop-footer {
+    display: none;
+}
+
+@media (min-width: 900px) {
+    #menu {
+        padding: 32px 40px 120px;
+        text-align: left;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 82% 22%, rgba(255, 204, 0, 0.1), transparent 26%),
+            linear-gradient(90deg, #030303 0%, #050505 46%, #0a0803 100%);
+    }
+
+    .menu-bg-carousel,
+    .menu-bg-logo {
+        display: block;
+        position: fixed;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .menu-bg-carousel {
+        inset: 0;
+        overflow: hidden;
+    }
+
+    .menu-bg-carousel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at 70% 36%, rgba(255, 204, 0, 0.1), transparent 28%),
+            linear-gradient(90deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.68) 50%, rgba(0, 0, 0, 0.86) 100%);
+    }
+
+    .menu-bg-carousel span {
+        position: absolute;
+        top: 4vh;
+        right: max(32px, calc((100vw - 1180px) / 2));
+        width: min(52vw, 720px);
+        height: 92vh;
+        border-radius: 34px;
+        background-position: center;
+        background-size: cover;
+        opacity: 0;
+        filter: blur(5px) saturate(1) contrast(1.02);
+        transform: scale(1.02);
+        animation: menuBgFade 36s infinite;
+    }
+
+    .menu-bg-logo {
+        top: 28%;
+        right: max(40px, calc((100vw - 1180px) / 2));
+        width: min(28vw, 360px);
+        aspect-ratio: 1;
+        background: url("../src/Logo.jpg") center/contain no-repeat;
+        opacity: 0.1;
+        filter: blur(4px) saturate(0.85);
+        transform: translateY(-50%);
+    }
+
+    #menu .video-fondo {
+        display: none;
+    }
+
+    #menu > div[onclick*="inicio"] {
+        display: none !important;
+    }
+
+    #menu h2 {
+        position: relative;
+        z-index: 1;
+        max-width: 1180px;
+        margin: 8px auto 10px !important;
+        font-size: 3.35rem;
+        line-height: 0.9;
+    }
+
+    #menu > h2 {
+        display: none;
+    }
+
+    #contenedor-menu {
+        position: relative;
+        z-index: 1;
+        max-width: 1180px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 14px;
+        align-items: stretch;
+    }
+
+    .menu-desktop-title {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin: 8px 0 4px;
+    }
+
+    .menu-desktop-title img {
+        width: 62px;
+        height: 62px;
+        flex: 0 0 62px;
+        border: 1px solid rgba(255, 204, 0, 0.36);
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 0 30px rgba(255, 204, 0, 0.1);
+    }
+
+    .menu-desktop-title h2 {
+        margin: 0 !important;
+        font-size: 3.25rem;
+    }
+
+    .menu-desktop-title .menu-subtitle {
+        margin: 2px 0 0;
+    }
+
+    .menu-subtitle-mobile {
+        display: none;
+    }
+
+    .menu-subtitle,
+    .menu-tabs,
+    .titulo-promos,
+    .menu-combo-note,
+    .menu-empty,
+    .menu-desktop-footer {
+        grid-column: 1 / -1;
+    }
+
+    .menu-subtitle {
+        max-width: 560px;
+        margin: 0 0 18px;
+        font-size: 1.05rem;
+    }
+
+    .menu-tabs {
+        width: fit-content;
+        margin-bottom: 8px;
+        padding: 6px;
+        gap: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.055);
+        overflow: visible;
+    }
+
+    .menu-tabs button {
+        min-width: 92px;
+        padding: 11px 16px;
+        border-radius: 12px;
+        font-size: 0.86rem;
+    }
+
+    .titulo-promos {
+        margin: 30px 0 14px;
+        font-size: 1rem;
+    }
+
+    .menu-combo-note {
+        width: fit-content;
+        max-width: 100%;
+        margin: 0 0 2px;
+        padding: 11px 14px;
+    }
+
+    .menu-combo-note p {
+        font-size: 0.92rem;
+    }
+
+    .menu-card {
+        grid-column: span 6;
+    }
+
+    .card-promo {
+        min-height: 190px;
+    }
+
+    .card-promo .img-producto {
+        width: 148px;
+        height: 160px;
+        min-height: 160px;
+    }
+
+    .menu-card-tag {
+        margin-bottom: 8px;
+    }
+
+    .menu-desktop-footer {
+        display: flex;
+        margin-top: 44px;
+        padding: 22px 0 4px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.72);
+    }
+
+    .menu-footer-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .menu-footer-brand img {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .menu-footer-brand strong,
+    .menu-footer-brand span {
+        display: block;
+    }
+
+    .menu-footer-brand strong {
+        color: #fff;
+        font-size: 0.98rem;
+        font-weight: 950;
+    }
+
+    .menu-footer-brand span {
+        margin-top: 3px;
+        color: var(--amarillo);
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        font-weight: 900;
+    }
+
+    .menu-footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .menu-footer-links a,
+    .menu-footer-links span {
+        padding: 9px 12px;
+        border: 1px solid rgba(255, 204, 0, 0.28);
+        border-radius: 999px;
+        color: var(--amarillo);
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 900;
+    }
+
+    .menu-footer-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 5px;
+        min-width: 230px;
+        color: rgba(255, 255, 255, 0.62);
+        text-align: right;
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    .menu-footer-meta span:nth-child(2) {
+        color: var(--amarillo);
+        text-transform: uppercase;
+        font-size: 0.74rem;
+        font-weight: 950;
+    }
+}
+
+@keyframes menuBgFade {
+    0%,
+    12% {
+        opacity: 0;
+    }
+
+    18%,
+    34% {
+        opacity: 0.28;
+    }
+
+    44%,
+    100% {
+        opacity: 0;
+    }
+}
+
+@media (min-width: 1180px) {
+    .menu-card {
+        grid-column: span 4;
+    }
+}

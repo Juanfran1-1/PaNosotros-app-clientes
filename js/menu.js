@@ -12,9 +12,67 @@ function renderFiltroMenu(nombre, filtro) {
         </button>`;
 }
 
+function obtenerImagenesFondoMenu() {
+    const imagenes = productos
+        .map(producto => producto.foto)
+        .filter(foto => foto && !String(foto).toLowerCase().includes('logo.jpg'));
+
+    return [...new Set(imagenes)].slice(0, 6);
+}
+
+function renderFondoDesktopMenu() {
+    const imagenes = obtenerImagenesFondoMenu();
+
+    if (imagenes.length === 0) {
+        return '<div class="menu-bg-logo" aria-hidden="true"></div>';
+    }
+
+    return `
+        <div class="menu-bg-carousel" aria-hidden="true">
+            ${imagenes.map((foto, index) => `
+                <span style="background-image: url('${foto}'); animation-delay: ${index * 6}s;"></span>
+            `).join('')}
+        </div>
+    `;
+}
+
+function renderFooterDesktopMenu() {
+    const whatsapp = normalizarNumeroWhatsapp(configTienda.whatsapp || "");
+    const whatsappTexto = whatsapp ? `+${whatsapp}` : "WhatsApp no configurado";
+
+    return `
+        <footer class="menu-desktop-footer">
+            <div class="menu-footer-brand">
+                <img src="src/Logo.jpg" alt="Pa Nosotros">
+                <div>
+                    <strong>PA' NOSOTROS</strong>
+                    <span>Mini burgers</span>
+                </div>
+            </div>
+            <div class="menu-footer-links">
+                ${whatsapp ? `<a href="https://wa.me/${whatsapp}" target="_blank" rel="noopener">${whatsappTexto}</a>` : `<span>${whatsappTexto}</span>`}
+                <a href="https://www.instagram.com/mminiburgers/" target="_blank" rel="noopener">Nuestro Instagram</a>
+            </div>
+            <div class="menu-footer-meta">
+                <span>Fundado por Tomás Aguilera</span>
+                <span>Since 2025</span>
+                <span>Diseñado por Juan Uceda</span>
+            </div>
+        </footer>
+    `;
+}
+
 function cargarMenu() {
     const contenedor = document.getElementById('contenedor-menu');
     if (!contenedor) return;
+
+    document.querySelectorAll('#menu > .menu-bg-carousel, #menu > .menu-bg-logo').forEach(fondo => fondo.remove());
+    const menu = document.getElementById('menu');
+    if (menu) {
+        menu.insertAdjacentHTML('afterbegin', renderFondoDesktopMenu());
+        menu.insertAdjacentHTML('afterbegin', '<div class="menu-bg-logo" aria-hidden="true"></div>');
+    }
+
     contenedor.innerHTML = "";
 
     // Verificar si el local está cerrado para el modo "solo lectura"
@@ -24,7 +82,14 @@ function cargarMenu() {
     const promosVisibles = promos.filter(promoTieneVariedadesDisponibles);
 
     contenedor.innerHTML += `
-        <p class="menu-subtitle">Elegí tus favoritos</p>
+        <div class="menu-desktop-title">
+            <img src="src/Logo.jpg" alt="Pa Nosotros">
+            <div>
+                <h2>Menú</h2>
+                <p class="menu-subtitle">Elegí tus favoritos</p>
+            </div>
+        </div>
+        <p class="menu-subtitle menu-subtitle-mobile">Elegí tus favoritos</p>
         <div class="menu-tabs" aria-label="Categorías del menú">
             ${renderFiltroMenu('Todas', 'todas')}
             ${renderFiltroMenu('Minis', 'minis')}
@@ -107,6 +172,8 @@ function cargarMenu() {
             </div>
         `;
     }
+
+    contenedor.innerHTML += renderFooterDesktopMenu();
 
     // Ocultar el botón flotante del carrito si el local está cerrado
     const btnCarrito = document.getElementById('btn-flotante-carrito');

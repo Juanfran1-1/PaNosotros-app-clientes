@@ -78,6 +78,10 @@ function desbloquearConfirmacionPedido() {
     setEstadoBotonConfirmar(false);
 }
 
+function normalizarNumeroWhatsapp(numero) {
+    return String(numero || '').replace(/\D/g, '');
+}
+
 async function enviarWhatsApp() {
     if (pedidoEnProceso) {
         mostrarMensaje("Ya estamos procesando tu pedido...", 2500);
@@ -198,8 +202,15 @@ async function enviarWhatsApp() {
     const dir = document.getElementById('dir-cliente').value.trim();
     const pago = document.getElementById('metodo-pago').value;
 
-    if (!nombre || (entrega === 'Delivery' && !dir)) {
+    if (!nombre || !telefono || (entrega === 'Delivery' && !dir)) {
         mostrarMensaje("CompletÃ¡ tus datos âœï¸", 3000);
+        desbloquearConfirmacionPedido();
+        return;
+    }
+
+    const whatsappDestino = normalizarNumeroWhatsapp(configTienda.whatsapp);
+    if (!whatsappDestino) {
+        mostrarMensaje("WhatsApp no configurado. ReintentÃ¡ mÃ¡s tarde.", 4000);
         desbloquearConfirmacionPedido();
         return;
     }
@@ -236,6 +247,31 @@ async function enviarWhatsApp() {
             }
         }
 
+        try {
+            await enviarNotificacionPedidoEmail({
+                pedido_id: idGenerado,
+                cliente: nombre,
+                telefono: telefono,
+                detalle: detalleBD,
+                monto: total,
+                metodo_pago: pago,
+                entrega: entrega,
+                direccion: entrega === 'Delivery' ? dir : 'Retira en local',
+                subtotal: entrega === "Delivery" ? total - COSTO_ENVIO : total,
+                costo_envio: entrega === "Delivery" ? COSTO_ENVIO : 0,
+                items: carrito.map(item => ({
+                    nombre: item.nombre,
+                    cantidad: item.cantidad,
+                    precio: item.precio,
+                    subtotal: item.precio * item.cantidad,
+                    detalle: item.detalleLineas || [],
+                    quitados: item.quitados || []
+                }))
+            });
+        } catch (emailErr) {
+            console.warn("Pedido guardado, pero no se pudo enviar el email interno:", emailErr);
+        }
+
         let msg = ` *PEDIDO #${idGenerado || 'N/A'}* \n\n`;
         msg += `*Tu nombre:* ${nombre}\n*Entrega:* ${entrega}\n`;
         if (entrega === 'Delivery') msg += `*DirecciÃ³n:* ${dir}\n`;
@@ -267,7 +303,7 @@ async function enviarWhatsApp() {
         if (pago === 'Transferencia') msg += `--------------------------\n`;
         msg += `PodÃ©s consultar el estado de tu pedido con el nÃºmero *#${idGenerado}* en nuestra web.`;
 
-        whatsappPedidoUrl = `https://wa.me/${configTienda.whatsapp}?text=${encodeURIComponent(msg)}`;
+        whatsappPedidoUrl = `https://wa.me/${whatsappDestino}?text=${encodeURIComponent(msg)}`;
         const confirmadoNumero = document.getElementById('pedido-confirmado-numero');
         const confirmadoTotal = document.getElementById('pedido-confirmado-total');
         if (confirmadoNumero) confirmadoNumero.innerText = idGenerado || 'N/A';

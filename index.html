@@ -27,6 +27,9 @@
     </div>
 
     <section id="inicio">
+        <button class="home-review-button" type="button" onclick="abrirModalResena()" aria-label="Dejanos tu reseña">
+            <img src="src/burger-icon-color.webp" alt="" aria-hidden="true">
+        </button>
         <img class="home-logo" src="src/Logo.jpg" alt="Logo Pa Nosotros">
         <p class="hero-title">PA'<br><span>NOSOTROS</span></p>
         <p class="hero-kicker">Mini burgers</p>
@@ -56,7 +59,7 @@
         </video>
 
         <div class="tracking-content">
-            <button class="tracking-back" type="button" onclick="mostrarPantalla('inicio')" aria-label="Volver al inicio">←</button>
+            <button class="tracking-back" type="button" onclick="volverDesdeTracking()" aria-label="Volver">←</button>
 
             <div class="tracking-header">
                 <span>Estado del pedido</span>
@@ -102,6 +105,14 @@
                     <path d="M17 17.5a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6Z"></path>
                 </svg>
             </button>
+            <button
+                class="menu-review-button"
+                type="button"
+                onclick="abrirModalResena()"
+            >
+                <img src="src/burger-icon-white.webp" alt="" aria-hidden="true">
+                Dejanos tu reseña
+            </button>
             <h2 style="margin-top: 40px; position: relative; z-index: 1;">Menú</h2>
             
             <div class="lista-productos" id="contenedor-menu" style="position: relative; z-index: 1;"></div>
@@ -112,6 +123,47 @@
                 <span class="cart-price">$<span id="cart-total">0</span></span>
             </button>
     </section>
+
+    <div id="modal-resena" class="modal-resena" style="display:none;">
+        <div class="modal-resena-panel">
+            <button class="modal-resena-close" type="button" onclick="cerrarModalResena()" aria-label="Cerrar">×</button>
+            <span class="modal-resena-kicker">Tu opinión</span>
+            <h3>Dejanos tu reseña</h3>
+            <p>Contanos cómo estuvo tu experiencia con las mini burgers.</p>
+
+            <label for="resena-nombre">Nombre</label>
+            <input type="text" id="resena-nombre" maxlength="60" minlength="2" required placeholder="Ej: Juan">
+
+            <label>¿Cuántas mini burgers nos das?</label>
+
+            <div class="burger-rating" id="burger-rating" data-value="5">
+                <button type="button" data-value="1" aria-label="1 mini burger"></button>
+                <button type="button" data-value="2" aria-label="2 mini burgers"></button>
+                <button type="button" data-value="3" aria-label="3 mini burgers"></button>
+                <button type="button" data-value="4" aria-label="4 mini burgers"></button>
+                <button type="button" data-value="5" aria-label="5 mini burgers"></button>
+            </div>
+
+            <label>¿Qué destacarías?</label>
+
+            <div class="review-tags" id="review-tags">
+                <button type="button" data-tag="Sabor">🍔 Sabor</button>
+                <button type="button" data-tag="Envío rápido">⚡ Envío rápido</button>
+                <button type="button" data-tag="Atención">😊 Atención</button>
+                <button type="button" data-tag="Precio">💛 Precio</button>
+                <button type="button" data-tag="Calidad">⭐ Calidad</button>
+            </div>
+
+            <input type="hidden" id="resena-tags" value="">
+
+            <input type="hidden" id="resena-puntaje" value="5">
+
+            <label for="resena-texto">Contanos tu experiencia</label>
+            <textarea id="resena-texto" maxlength="280" placeholder="Qué te gustó, qué pedirías de nuevo..."></textarea>
+
+            <button id="btn-guardar-resena" class="btn-principal" type="button" onclick="guardarResena()">GUARDAR RESEÑA</button>
+        </div>
+    </div>
 
     <section id="detalle-producto" style="display:none;">
         <div class="header-detalle">
@@ -222,6 +274,7 @@
     <script src="js/ui.js"></script>
     <script src="js/api.js"></script>
     <script src="js/tracking.js"></script>
+    <script src="js/reviews.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/menu.js"></script>
     <script src="js/cart.js"></script>

@@ -1,4 +1,9 @@
 // --- FUNCIÓN PARA CONSULTAR ESTADO DEL PEDIDO ---
+function volverDesdeTracking() {
+    const esDesktop = window.matchMedia("(min-width: 900px)").matches;
+    mostrarPantalla(esDesktop ? 'menu' : 'inicio');
+}
+
 async function consultarEstado() {
     const input = document.getElementById('input-tracking');
     const nroPedido = parseInt(input.value);
