@@ -13,10 +13,9 @@ function renderFiltroMenu(nombre, filtro) {
 }
 
 function obtenerImagenesFondoMenu() {
-    const imagenes = [
-        ...promos.map(promo => promo.foto),
-        ...productos.map(producto => producto.foto)
-    ].filter(foto => foto && !String(foto).toLowerCase().includes('logo.jpg'));
+    const imagenes = productos
+        .map(producto => producto.foto)
+        .filter(foto => foto && !String(foto).toLowerCase().includes('logo.jpg'));
 
     return [...new Set(imagenes)].slice(0, 6);
 }
