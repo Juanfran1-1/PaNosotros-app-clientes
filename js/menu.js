@@ -51,9 +51,13 @@ function renderFooterDesktopMenu() {
             </div>
             <div class="menu-footer-links">
                 ${whatsapp ? `<a href="https://wa.me/${whatsapp}" target="_blank" rel="noopener">${whatsappTexto}</a>` : `<span>${whatsappTexto}</span>`}
-                <a href="https://www.instagram.com/mminiburgers/" target="_blank" rel="noopener">@mminiburgers</a>
+                <a href="https://www.instagram.com/mminiburgers/" target="_blank" rel="noopener">Nuestro Instagram</a>
             </div>
-            <p>Fundado por Juan Uceda. El que empuja la idea, banca el fuego y la hace crecer.</p>
+            <div class="menu-footer-meta">
+                <span>Fundado por Tomás Aguilera</span>
+                <span>Since 2025</span>
+                <span>Diseñado por Juan Uceda</span>
+            </div>
         </footer>
     `;
 }
