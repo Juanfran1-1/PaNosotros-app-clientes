@@ -22,15 +22,6 @@ Por la key real de Resend, por ejemplo:
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-Para probar WhatsApp automatico al dueño con Zavu, agregar tambien:
-
-```env
-ZAVUDEV_API_KEY=zv_live_xxxxxxxxxxxxxxxxx
-OWNER_WHATSAPP=+5492215383928
-```
-
-Si `ZAVUDEV_API_KEY` no esta cargada, el email sigue funcionando y solo se saltea el WhatsApp automatico.
-
 ## 2. Subir secrets y desplegar
 
 Desde la carpeta del menu cliente:
