@@ -67,69 +67,6 @@ function buildCustomerWhatsappUrl(pedido: PedidoPayload) {
   return `https://wa.me/${telefono}?text=${encodeURIComponent(texto)}`;
 }
 
-function buildOwnerWhatsappText(pedido: PedidoPayload) {
-  const items = Array.isArray(pedido.items) && pedido.items.length
-    ? pedido.items.map((item) => {
-      const detalle = Array.isArray(item.detalle) && item.detalle.length
-        ? ` (${item.detalle.join(" | ")})`
-        : "";
-      const quitados = Array.isArray(item.quitados) && item.quitados.length
-        ? ` SIN: ${item.quitados.join(", ").toUpperCase()}`
-        : "";
-
-      return `- ${item.cantidad || 0}x ${item.nombre || "Producto"}${detalle}${quitados} - ${formatMoney(item.subtotal)}`;
-    }).join("\n")
-    : pedido.detalle || "Sin detalle";
-
-  return [
-    `Nuevo pedido #${pedido.pedido_id || "N/A"}`,
-    "",
-    `Cliente: ${pedido.cliente || "-"}`,
-    `WhatsApp: ${pedido.telefono || "-"}`,
-    `Entrega: ${pedido.entrega || "-"}`,
-    `Direccion: ${pedido.direccion || "-"}`,
-    `Pago: ${pedido.metodo_pago || "-"}`,
-    "",
-    "Pedido:",
-    items,
-    "",
-    `Subtotal: ${formatMoney(pedido.subtotal)}`,
-    `Envio: ${formatMoney(pedido.costo_envio)}`,
-    `Total: ${formatMoney(pedido.monto)}`,
-  ].join("\n");
-}
-
-async function sendOwnerWhatsapp(pedido: PedidoPayload) {
-  const zavuApiKey = Deno.env.get("ZAVUDEV_API_KEY");
-  const ownerWhatsapp = Deno.env.get("OWNER_WHATSAPP");
-
-  if (!zavuApiKey || !ownerWhatsapp) {
-    return { skipped: true };
-  }
-
-  const response = await fetch("https://api.zavu.dev/v1/messages", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${zavuApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      to: ownerWhatsapp,
-      channel: "whatsapp",
-      text: buildOwnerWhatsappText(pedido),
-      idempotencyKey: `owner-order-${pedido.pedido_id}`,
-    }),
-  });
-
-  const result = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(`Zavu error ${response.status}: ${JSON.stringify(result)}`);
-  }
-
-  return { skipped: false, result };
-}
-
 function buildItemsHtml(items: PedidoItem[] = []) {
   if (!items.length) {
     return "<p>Sin detalle estructurado.</p>";
@@ -189,8 +126,7 @@ function buildEmailHtml(pedido: PedidoPayload) {
       <h3>Cliente</h3>
       <p>
         <strong>Nombre:</strong> ${escapeHtml(pedido.cliente)}<br>
-        <strong>WhatsApp:</strong> ${escapeHtml(pedido.telefono)}${whatsappUrl ? ` - <a href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">abrir chat</a>` : ""}<br>
-        ${whatsappUrl ? `<strong>Link WhatsApp:</strong> <a href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">${escapeHtml(whatsappUrl)}</a><br>` : ""}
+        <strong>WhatsApp:</strong> ${escapeHtml(pedido.telefono)}<br>
         <strong>Entrega:</strong> ${escapeHtml(pedido.entrega)}<br>
         <strong>Direccion:</strong> ${escapeHtml(pedido.direccion)}<br>
         <strong>Pago:</strong> ${escapeHtml(pedido.metodo_pago)}
@@ -264,16 +200,5 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "No se pudo enviar el email", details: result }, 502);
   }
 
-  let whatsappResult = { skipped: true };
-  try {
-    whatsappResult = await sendOwnerWhatsapp(pedido);
-  } catch (zavuErr) {
-    console.warn("No se pudo enviar WhatsApp al dueño:", zavuErr);
-  }
-
-  return jsonResponse({
-    ok: true,
-    id: result.id || null,
-    owner_whatsapp: whatsappResult,
-  });
+  return jsonResponse({ ok: true, id: result.id || null });
 });
