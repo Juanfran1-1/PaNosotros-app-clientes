@@ -5,9 +5,21 @@ async function cargarConfiguracion() {
         if (error) throw error;
         if (data) {
             const estadoPrevioLocal = estadoLocalAnterior;
+            const mantenimientoPrevio = modoCierreTemporal;
             configTienda = data;
+            modoCierreTemporal = configTienda.mantenimiento === true;
             COSTO_ENVIO = data.COSTO_ENVIO || 0;
             const estaRealmenteAbierto = configTienda.abierto;
+
+            if (modoCierreTemporal) {
+                carrito = [];
+                total = 0;
+                localStorage.removeItem('carrito_panosotros');
+                if (typeof aplicarModoCierreTemporal === 'function') aplicarModoCierreTemporal();
+            } else if (mantenimientoPrevio && pantallaVisible('cierre-temporal')) {
+                window.location.reload();
+                return;
+            }
 
             if (estadoPrevioLocal !== null && estadoPrevioLocal !== estaRealmenteAbierto) {
                 if (estaRealmenteAbierto) {
@@ -65,89 +77,27 @@ async function cargarConfiguracion() {
     }
 }
 
-// --- NUEVA FUNCIÓN: GUARDAR PEDIDO EN TABLA Y DEVOLVER ID ---
-async function guardarPedidoEnSupabase(datos) {
-    const estadoInicial = (datos.metodo_pago === 'Transferencia') ? "Pendiente de Pago" : "Esperando Confirmacion";
-
-    const { data, error } = await _supabase
-        .from('pedidos')
-        .insert([
-            {
-                fecha: new Date().toISOString(),
-                detalle: datos.detalle,
-                cliente: datos.cliente,
-                numero: datos.telefono,
-                monto: parseInt(datos.monto),
-                metodo_pago: datos.metodo_pago,
-                entrega: datos.entrega,
-                direccion: datos.direccion,
-                estado: estadoInicial
-            }
-        ]).select();
-
-    if (error) {
-        console.error("Error al guardar pedido:", error);
-        throw error;
-    }
-
-    if (!data || !data[0] || !data[0].id) {
-        throw new Error("Supabase no devolvió el número del pedido.");
-    }
-
-    return data[0].id;
-}
-
-async function guardarItemsPedidoEnSupabase(pedidoId) {
-    if (!pedidoId) return;
-
-    for (const item of carrito) {
-        const esPromo = item.tipo_item === 'promo';
-        const subtotal = item.precio * item.cantidad;
-
-        const { data: itemGuardado, error: errorItem } = await _supabase
-            .from('pedido_items')
-            .insert([{
-                pedido_id: pedidoId,
-                hamburguesa_id: esPromo ? null : item.id,
-                promo_id: esPromo ? item.id : null,
-                tipo_item: esPromo ? 'promo' : 'hamburguesa',
-                nombre_snapshot: item.nombre_snapshot || item.nombre,
-                precio_unitario: item.precio,
-                cantidad: item.cantidad,
-                subtotal: subtotal
-            }])
-            .select()
-            .single();
-
-        if (errorItem) throw errorItem;
-
-        if (item.extras && item.extras.length > 0) {
-            const extrasPayload = item.extras.map(extra => ({
-                pedido_item_id: itemGuardado.id,
-                extra_id: extra.id || null,
-                nombre_snapshot: extra.nombre,
-                precio_unitario: extra.precio,
-                cantidad: (extra.cantidad || 1) * item.cantidad
-            }));
-
-            const { error: errorExtras } = await _supabase
-                .from('pedido_item_extras')
-                .insert(extrasPayload);
-
-            if (errorExtras) throw errorExtras;
-        }
-    }
-}
-
-async function enviarNotificacionPedidoEmail(datosPedido) {
-    const { error } = await _supabase.functions.invoke('notify-order', {
+async function crearPedidoSeguro(datosPedido) {
+    const { data, error } = await _supabase.functions.invoke('create-order', {
         body: datosPedido
     });
 
     if (error) {
-        console.error("Error al enviar notificación por email:", error);
-        throw error;
+        let mensaje = "No pudimos crear el pedido. Reintentá.";
+        try {
+            const detalle = await error.context?.json();
+            if (detalle?.error) mensaje = detalle.error;
+        } catch (_err) {
+            // Conservamos el mensaje general si la respuesta no contiene JSON.
+        }
+        throw new Error(mensaje);
     }
+
+    if (!data?.pedido_id) {
+        throw new Error("No se recibió el número del pedido.");
+    }
+
+    return data;
 }
 
 async function cargarProductosDesdeBD() {
@@ -334,6 +284,7 @@ function crearSnapshotMenu() {
         })),
         configuracion: {
             abierto: configTienda.abierto,
+            mantenimiento: configTienda.mantenimiento,
             COSTO_ENVIO,
             promo_titulo: configTienda.promo_titulo
         }

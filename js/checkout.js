@@ -1,4 +1,4 @@
-﻿// 8. ENVíO A WHATSAPP Y GUARDADO EN BD (CON VALIDACIí“N DE STOCK DINíMICA)
+// 8. ENVÍO A WHATSAPP Y GUARDADO EN BD (CON VALIDACIÓN DE STOCK DINÁMICA)
 function mostrarPasoCheckout(paso) {
     const checkout = document.getElementById('checkout');
     const pasos = {
@@ -125,19 +125,32 @@ async function enviarWhatsApp() {
     pedidoEnProceso = true;
     setEstadoBotonConfirmar(true, "CREANDO PEDIDO...");
 
-    // 1. Validar si el local está abierto
+    // 1. Validar si el local está abierto y la aplicación habilitada
     try {
-        const { data: nuevaConfig } = await _supabase.from('configuracion').select('abierto').single();
-        if (nuevaConfig) configTienda.abierto = nuevaConfig.abierto;
+        const { data: nuevaConfig } = await _supabase
+            .from('configuracion')
+            .select('abierto, mantenimiento')
+            .single();
+        if (nuevaConfig) {
+            configTienda.abierto = nuevaConfig.abierto;
+            configTienda.mantenimiento = nuevaConfig.mantenimiento;
+            modoCierreTemporal = nuevaConfig.mantenimiento === true;
+        }
     } catch (e) { console.log("Error al re-verificar cierre"); }
 
-    if (!configTienda.abierto) {
-        mostrarMensaje("Lo sentimos, el local ya se encuentra cerrado ðŸ˜´", 4000);
+    if (modoCierreTemporal) {
+        aplicarModoCierreTemporal();
         desbloquearConfirmacionPedido();
         return;
     }
 
-    // --- NUEVA VALIDACIí“N DE STOCK PRODUCTO POR PRODUCTO ---
+    if (!configTienda.abierto) {
+        mostrarMensaje("Lo sentimos, el local ya se encuentra cerrado 😴", 4000);
+        desbloquearConfirmacionPedido();
+        return;
+    }
+
+    // --- NUEVA VALIDACIÓN DE STOCK PRODUCTO POR PRODUCTO ---
     try {
         // Obtenemos los datos frescos de la tabla hamburguesas
         const { data: productosFresh, error: errorStock } = await _supabase
@@ -217,18 +230,18 @@ async function enviarWhatsApp() {
             
             // Si el producto no existe o disponible es false
             if (!prodBD || prodBD.disponible === false) {
-                mostrarMensaje(`âš ï¸ Lo sentimos \n\n El producto "${item.nombre}" se acaba de agotar. \n\n Por favor, eliminalo para continuar.`, 5000);
+                mostrarMensaje(`⚠️ Lo sentimos \n\n El producto "${item.nombre}" se acaba de agotar. \n\n Por favor, eliminalo para continuar.`, 5000);
                 desbloquearConfirmacionPedido();
-                return; // Cortamos la ejecución aquí­
+                return; // Cortamos la ejecución aquí
             }
         }
     } catch (e) {
         console.error("Error validando stock:", e);
-        mostrarMensaje("âŒ Error al verificar stock. Reintenta.", 3000);
+        mostrarMensaje("❌ Error al verificar stock. Reintentá.", 3000);
         desbloquearConfirmacionPedido();
         return;
     }
-    // --- FIN VALIDACIí“N DE STOCK ---
+    // --- FIN VALIDACIÓN DE STOCK ---
 
     const nombre = document.getElementById('nombre-cliente').value.trim();
     const telefono = obtenerTelefonoClienteWhatsapp();
@@ -237,7 +250,7 @@ async function enviarWhatsApp() {
     const pago = document.getElementById('metodo-pago').value;
 
     if (!nombre || !telefono || (entrega === 'Delivery' && !dir)) {
-        mostrarMensaje("Completá tus datos âœï¸", 3000);
+        mostrarMensaje("Completá tus datos ✍️", 3000);
         desbloquearConfirmacionPedido();
         return;
     }
@@ -251,60 +264,30 @@ async function enviarWhatsApp() {
 
     mostrarPasoCheckout('confirmando');
 
-    const detalleBD = carrito.map(item => {
-        let texto = `${item.cantidad}x ${item.nombre.trim()}`;
-        if (item.detalleLineas && item.detalleLineas.length > 0) {
-            texto += ` (${item.detalleLineas.join(' | ')})`;
-        }
-        if (item.quitados && item.quitados.length > 0) {
-            texto += ` (SIN: ${item.quitados.join(', ').toUpperCase()})`;
-        }
-        return texto;
-    }).join(' | ');
-
     try {
-        const idGenerado = await guardarPedidoEnSupabase({
+        const pedidoCreado = await crearPedidoSeguro({
             cliente: nombre,
             telefono: telefono,
-            detalle: detalleBD,
-            monto: total,
             metodo_pago: pago,
             entrega: entrega,
-            direccion: entrega === 'Delivery' ? dir : 'Retira en local'
+            direccion: entrega === 'Delivery' ? dir : '',
+            items: carrito.map(item => ({
+                id: item.id,
+                tipo_item: item.tipo_item,
+                cantidad: item.cantidad,
+                quitados: item.quitados || [],
+                variedades: item.variedades || [],
+                extras: (item.extras || []).map(extra => ({
+                    id: extra.id,
+                    cantidad: extra.cantidad || 1
+                })),
+                aclaracion: item.aclaracion || ''
+            }))
         });
 
-        if (idGenerado) {
-            try {
-                await guardarItemsPedidoEnSupabase(idGenerado);
-            } catch (itemsErr) {
-                console.error("Pedido guardado, pero fallo el detalle estructurado:", itemsErr);
-            }
-        }
-
-        try {
-            await enviarNotificacionPedidoEmail({
-                pedido_id: idGenerado,
-                cliente: nombre,
-                telefono: telefono,
-                detalle: detalleBD,
-                monto: total,
-                metodo_pago: pago,
-                entrega: entrega,
-                direccion: entrega === 'Delivery' ? dir : 'Retira en local',
-                subtotal: entrega === "Delivery" ? total - COSTO_ENVIO : total,
-                costo_envio: entrega === "Delivery" ? COSTO_ENVIO : 0,
-                items: carrito.map(item => ({
-                    nombre: item.nombre,
-                    cantidad: item.cantidad,
-                    precio: item.precio,
-                    subtotal: item.precio * item.cantidad,
-                    detalle: item.detalleLineas || [],
-                    quitados: item.quitados || []
-                }))
-            });
-        } catch (emailErr) {
-            console.warn("Pedido guardado, pero no se pudo enviar el email interno:", emailErr);
-        }
+        const idGenerado = pedidoCreado.pedido_id;
+        total = Number(pedidoCreado.total);
+        COSTO_ENVIO = Number(pedidoCreado.costo_envio || 0);
 
         let msg = ` *PEDIDO #${idGenerado || 'N/A'}* \n\n`;
         msg += `*Tu nombre:* ${nombre}\n*Entrega:* ${entrega}\n`;
@@ -323,7 +306,7 @@ async function enviarWhatsApp() {
 
         if(entrega === "Delivery") {
             msg += `Subtotal: $${total - COSTO_ENVIO}\n`;
-            msg += `Enví­o: $${COSTO_ENVIO}\n`;
+            msg += `Envío: $${COSTO_ENVIO}\n`;
         
         }
         if(entrega === "Retiro") {
@@ -335,7 +318,7 @@ async function enviarWhatsApp() {
         msg += `--------------------------\n`;
         if (pago === 'Transferencia') msg += `Recordá preguntar por la disponibilidad del stock antes de enviar el comprobante \n`;
         if (pago === 'Transferencia') msg += `--------------------------\n`;
-        msg += `Podés consultar el estado de tu pedido con el níºmero *#${idGenerado}* en nuestra web.`;
+        msg += `Podés consultar el estado de tu pedido con el número *#${idGenerado}* en nuestra web.`;
 
         whatsappPedidoUrl = `https://wa.me/${whatsappDestino}?text=${encodeURIComponent(msg)}`;
         const confirmadoNumero = document.getElementById('pedido-confirmado-numero');
@@ -355,7 +338,7 @@ async function enviarWhatsApp() {
 
     } catch (err) {
         console.error(err);
-        mostrarMensaje(" Error de conexión. Reintenta.", 3000);
+        mostrarMensaje(err.message || "Error de conexión. Reintentá.", 4000);
         desbloquearConfirmacionPedido();
         mostrarPasoCheckout('datos');
     }

@@ -1,5 +1,10 @@
 // 4. FUNCIONES DE NAVEGACIÓN
 function mostrarPantalla(idPantalla) {
+    if (modoCierreTemporal && idPantalla !== 'cierre-temporal') {
+        aplicarModoCierreTemporal();
+        return;
+    }
+
     const pantallaMenu = document.getElementById('menu');
     const pantallaActualVisible = pantallaMenu && pantallaMenu.style.display === 'block';
 
@@ -12,6 +17,8 @@ function mostrarPantalla(idPantalla) {
 }
 
 async function ejecutarCambioPantalla(idPantalla) { // Agregamos async aquí
+
+    if (modoCierreTemporal) idPantalla = 'cierre-temporal';
 
 
     const loader = document.getElementById('loader');
@@ -48,6 +55,27 @@ async function ejecutarCambioPantalla(idPantalla) { // Agregamos async aquí
         if (loader) loader.style.display = 'none';
         window.scrollTo(0, 0);
     }, 300);
+}
+
+function aplicarModoCierreTemporal() {
+    document.querySelectorAll('body > section').forEach(section => {
+        section.style.display = section.id === 'cierre-temporal' ? 'flex' : 'none';
+    });
+
+    document.querySelectorAll('.modal-resena, #modal-confirmacion').forEach(modal => {
+        modal.style.display = 'none';
+    });
+
+    const loader = document.getElementById('loader');
+    if (loader) loader.style.display = 'none';
+
+    const toast = document.getElementById('toast');
+    if (toast) {
+        toast.style.display = 'none';
+        toast.textContent = '';
+    }
+
+    window.scrollTo(0, 0);
 }
 
 function cerrarConfirmacion(acepta) {

@@ -25,6 +25,7 @@ let menuPollingTimer = null;
 let realtimeReconnectTimer = null;
 let ultimoSnapshotMenu = '';
 let estadoLocalAnterior = null;
+let modoCierreTemporal = false;
 
 let configTienda = {
     whatsapp: "",
@@ -32,4 +33,5 @@ let configTienda = {
     abierto: true,
     promo_titulo: "",
     direccion_local: "",
+    mantenimiento: false,
 };

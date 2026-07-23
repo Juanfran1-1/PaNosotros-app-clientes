@@ -11,6 +11,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     await cargarConfiguracion();
+
+    if (modoCierreTemporal) {
+        aplicarModoCierreTemporal();
+        iniciarRealtimeMenu();
+        return;
+    }
+
     await cargarProductosDesdeBD();
     await cargarPromosDesdeBD();
     

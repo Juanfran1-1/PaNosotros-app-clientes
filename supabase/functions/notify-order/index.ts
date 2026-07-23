@@ -157,6 +157,12 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Metodo no permitido" }, 405);
   }
 
+  const internalSecret = Deno.env.get("ORDER_INTERNAL_SECRET");
+  const providedSecret = req.headers.get("x-internal-secret");
+  if (!internalSecret || !providedSecret || providedSecret !== internalSecret) {
+    return jsonResponse({ error: "No autorizado" }, 401);
+  }
+
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
   const emailTo = Deno.env.get("ORDER_EMAIL_TO");
   const emailFrom = Deno.env.get("ORDER_EMAIL_FROM");
