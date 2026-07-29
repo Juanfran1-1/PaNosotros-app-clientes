@@ -52,6 +52,50 @@
         <div class="closure-photo" role="img" aria-label="Mini burgers de Pa Nosotros"></div>
     </section>
 
+    <section id="desktop-hero" class="desktop-hero" aria-label="Presentación de mini burgers" style="display:none;">
+        <div class="desktop-hero__stage" id="desktop-hero-stage" aria-hidden="true"></div>
+        <div class="desktop-hero__shade" aria-hidden="true"></div>
+
+        <header class="desktop-hero__header">
+            <span class="desktop-hero__brand" aria-label="Pa Nosotros">
+                <span>PA'</span>
+                <strong>NOSOTROS</strong>
+            </span>
+        </header>
+
+        <div class="desktop-hero__copy" aria-live="polite">
+            <h1 id="desktop-hero-title">Cheddy Krueger</h1>
+        </div>
+
+        <div
+            class="desktop-hero__ingredients"
+            id="desktop-hero-ingredients"
+            aria-label="Ingredientes principales"
+        ></div>
+
+        <div class="desktop-hero__navigation" aria-label="Navegación de productos">
+            <button id="desktop-hero-previous" class="desktop-hero__arrow" type="button" aria-label="Producto anterior">←</button>
+            <button id="desktop-hero-next" class="desktop-hero__arrow" type="button" aria-label="Producto siguiente">→</button>
+        </div>
+
+        <a
+            class="desktop-hero__instagram"
+            href="https://www.instagram.com/mminiburgers/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Seguir a Pa Nosotros en Instagram"
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+                <circle cx="12" cy="12" r="4"></circle>
+                <circle cx="17.5" cy="6.5" r="1"></circle>
+            </svg>
+            <span>@mminiburgers</span>
+        </a>
+
+        <button class="desktop-hero__cta" type="button" onclick="mostrarPantalla('menu')">Ver menú</button>
+    </section>
+
     <div id="modal-confirmacion" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; padding:20px;">
         <div style="background:white; padding:25px; border-radius:20px; text-align:center; max-width:320px; width:100%; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
             <p style="color:#333; font-weight:bold; margin-bottom:20px; font-size:1.1rem;">¿Deseas eliminar el pedido actual y volver al inicio?</p>
@@ -126,7 +170,7 @@
                 <source src="src/video_fondo.mp4" type="video/mp4">
             </video>
 
-            <div onclick="mostrarPantalla('inicio')" style="position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 1.2rem; background: #332d2b; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;">←</div>
+            <div onclick="mostrarPantalla(window.matchMedia('(min-width: 900px)').matches ? 'desktop-hero' : 'inicio')" style="position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 1.2rem; background: #332d2b; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;">←</div>
             <button
                 class="menu-tracking-button"
                 type="button"
@@ -341,6 +385,7 @@
     <script src="js/menu.js"></script>
     <script src="js/cart.js"></script>
     <script src="js/checkout.js"></script>
+    <script src="js/desktop-hero.js"></script>
     <script src="scripts.js"></script>
 </body>
 </html>

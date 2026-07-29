@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#24150c">
+    <link rel="icon" href="src/Logo.jpg" type="image/jpeg">
+    <title>Mini Burgers — Hero Preview</title>
+    <link rel="stylesheet" href="css/hero-preview.css">
+</head>
+<body>
+    <main class="hero-preview" id="hero-preview" aria-label="Presentación de mini burgers">
+        <div class="hero-preview__stage" id="hero-media-stage" aria-hidden="true"></div>
+
+        <div class="hero-preview__shade" aria-hidden="true"></div>
+
+        <header class="hero-preview__header">
+            <a class="hero-preview__brand" href="hero-preview.html" aria-label="Pa Nosotros">
+                <span>PA'</span>
+                <strong>NOSOTROS</strong>
+            </a>
+        </header>
+
+        <section class="hero-preview__copy" aria-labelledby="hero-product-name" aria-live="polite">
+            <h1 id="hero-product-name">Cheddy Krueger</h1>
+        </section>
+
+        <div class="hero-preview__ingredients" id="hero-ingredients" aria-label="Ingredientes principales"></div>
+
+        <div class="hero-preview__navigation" aria-label="Navegación de productos">
+            <button class="hero-preview__arrow" id="hero-previous" type="button" aria-label="Producto anterior">
+                <span aria-hidden="true">←</span>
+            </button>
+            <button class="hero-preview__arrow" id="hero-next" type="button" aria-label="Producto siguiente">
+                <span aria-hidden="true">→</span>
+            </button>
+        </div>
+
+        <a
+            class="hero-preview__instagram"
+            href="https://www.instagram.com/mminiburgers/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Seguir a Pa Nosotros en Instagram"
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+                <circle cx="12" cy="12" r="4"></circle>
+                <circle cx="17.5" cy="6.5" r="1"></circle>
+            </svg>
+            <span>@mminiburgers</span>
+        </a>
+
+        <footer class="hero-preview__footer">
+            <a class="hero-preview__cta" href="index.html">Ver menú</a>
+        </footer>
+    </main>
+
+    <script src="js/hero-preview.js"></script>
+</body>
+</html>

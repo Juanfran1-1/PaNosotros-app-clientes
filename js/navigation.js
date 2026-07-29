@@ -32,6 +32,10 @@ async function ejecutarCambioPantalla(idPantalla) { // Agregamos async aquí
             target.style.display = (idPantalla === 'inicio') ? 'flex' : 'block';
         }
 
+        if (typeof gestionarHeroDesktopVisibilidad === 'function') {
+            gestionarHeroDesktopVisibilidad(idPantalla === 'desktop-hero');
+        }
+
         if (idPantalla === 'inicio' && typeof renderHomePromos === 'function') {
             renderHomePromos();
         }

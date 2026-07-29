@@ -33,6 +33,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderHomePromos();
     iniciarRealtimeMenu();
     iniciarPollingMenu();
-    mostrarPantalla(esDesktop ? "menu" : "inicio");
+    if (esDesktop && typeof iniciarHeroDesktop === 'function') {
+        iniciarHeroDesktop();
+    }
+    mostrarPantalla(esDesktop ? "desktop-hero" : "inicio");
     toggleDir();
 });
